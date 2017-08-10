@@ -1,10 +1,9 @@
 ---
 layout: post
-title: nodejs deploy
-date: 2017-08-10 16:08:00.000000000 +08:00
+title: nodejs-deploy-document
+date: 2017-08-10 15:32:24.000000000 +08:00
 ---
 
-# nodejs-deploy-document
 nodejs线上部署文档教程
 
 ## 目录
