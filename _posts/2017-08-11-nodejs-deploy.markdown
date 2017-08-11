@@ -1,7 +1,8 @@
 ---
 layout: post
-title: nodejs-deploy-document
-date: 2017-08-10 15:32:24.000000000 +08:00
+title: Nodejs online server deployment
+date: 2017-08-11 11:30:00.000000000 +08:00
+tag: nodejs server deploy
 ---
 
 nodejs线上部署文档教程
@@ -255,7 +256,7 @@ vim app.js
 ```
 编辑文件
 
-```
+{% highlight ruby %}
 const http = require("http");
 
 http.createServer(function(req, res) {
@@ -265,7 +266,8 @@ http.createServer(function(req, res) {
 }).listen(8080)
 
 console.log('server running on http://47.94.211.202:8080/');
-```
+{% endhighlight %}
+
 启动服务
 
 ```
@@ -335,7 +337,7 @@ sudo vi cypws-cn-8080.conf
 ```
 编辑配置文件
 
-```
+{% highlight ruby %}
 upstream cypws {
   server 127.0.0.1:8080;
 }
@@ -354,7 +356,8 @@ server {
 
   }
 }
-```
+{% endhighlight %}
+
 返回上一层目录 `/etc/nginx`
 
 编辑配置文件
@@ -689,7 +692,7 @@ vi 数据库名.backup.sh
 ```
 编辑脚本文件
 
-```
+{% highlight ruby %}
 #!/bin/sh
 
 backUpFolder=/home/管理员名/backup/数据库名
@@ -704,7 +707,8 @@ mongodump -h 127.0.0.1:29999 -d 数据库名 -u 数据库名_wheel -p 密码 -o 
 tar zcvf $backFileName.tar.gz $backFileName
 
 rm -rf $backFileName
-```
+{% endhighlight %}
+
 在更目录下，创建文件夹
 
 ```
@@ -740,7 +744,7 @@ crontab -e
 vi upload.js
 ```
 
-```
+{% highlight ruby %}
 var qiniu = require('qiniu');
 var config = new qiniu.conf.Config();
 // 空间对应的机房
@@ -783,7 +787,8 @@ formUploader.putFile(uploadToken, key, localFile, putExtra, function(respErr,
     console.log(respBody);
   }
 });
-```
+{% endhighlight %}
+
 再编辑备份脚本文件`vi 项目名称.backup.sh`，在最后一行添加：
 
 ```
@@ -840,7 +845,7 @@ sudo chmod 777 production
 ```
 在本地项目根目录新建文件`ecosystem.json`
 
-```
+{% highlight ruby %}
 {
     "apps": [
         {
@@ -877,7 +882,8 @@ sudo chmod 777 production
         }
     }
 }
-```
+{% endhighlight %}
+
 然后通过git提交代码
 
 在本地项目根目录下，第一次执行拷贝项目代码到服务器上
@@ -906,7 +912,7 @@ source .bashrc
 
 编辑配置文件`sudo vi  xxxx-3000.conf`
 
-```
+{% highlight ruby %}
 upstream 项目名 {
   server 127.0.0.1:3000;
 }
@@ -929,7 +935,8 @@ server {
     root /www/项目名称/production/current/client/dist;
   }
 }
-```
+{% endhighlight %}
+
 保存，重启服务器
  
 ```
@@ -1039,7 +1046,7 @@ sudo mv ssl /www/
 
 location部分不用改，具体代码如下：
 
-```
+{% highlight ruby %}
 upstream free {
 }
 
@@ -1062,7 +1069,7 @@ server {
     rewrite ^(.*)  https://$host$1 permanent;
   }
 }
-```
+{% endhighlight %}
 修改另外一个nginx配置文件
 
 检查配置文件有没有错误`sudo nginx -t` 检查配置文件有没有错误
