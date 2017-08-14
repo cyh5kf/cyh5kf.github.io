@@ -1,11 +1,9 @@
 ---
 layout: post
-title: Nodejs online server deployment
+title: nodejs线上部署教程
 date: 2017-08-11 11:30:00.000000000 +08:00
 tag: nodejs server deploy
 ---
-
-nodejs线上部署文档教程
 
 ## 目录
 * [购买域名和服务器](#购买域名服务器)
@@ -986,7 +984,7 @@ pm2 deploy ecosystem.json production
 
 7.在本地，先提交代码到仓库
 
-8.部署代码，第一次，初始化服务器项目目录结构，`pm2 deploy ecosystem.json production setup`，第二次部署发布`pm2 deploy ecosystem.json productio`
+8.部署代码，第一次，初始化服务器项目目录结构，`pm2 deploy ecosystem.json production setup`，第二次部署发布`pm2 deploy ecosystem.json production`
 
 9.在服务器上，检查`pm2 list` ,如有问题，不断重启，先停pm2服务，检查日志，`pm2 logs`
 
