@@ -105,3 +105,120 @@ Node是单线程的，这里的单线程仅仅只是JavaScript执行在单线程
 
 5.异步转同步
 
+#### 异步编程解决方案
+1.事件发布/订阅模式
+
+```
+// 订阅
+emitter.on("event", function(message) {
+	console.log(message);
+})
+// 发布
+emitter.emit('event1', "I am message");
+```
+2.Promise/Deferred模式
+##### Promises/A
+Promise操作只有三种状态：未完成态、完成态和失败态，只会出现从未完成态向完成态或失败态转化，不能逆反。一个Promise对象具有then()方法。
+
+3.流程控制库
+
+尾触发方法是需要手工调用才能持续执行后续调用，常见的是next。
+
+`app.stack = []` stack属性是这个服务器内部维护的中间件队列
+
+以下为use()方法的重要部分
+
+```
+app.use = function(route, fn) {
+	this.stack.push({ route: route, handle: fn});
+	return this;
+}
+```
+监听函数实现：
+
+```
+app.listen = function() {
+	var server = http.createServer(this);
+	return server.listen.apply(server, arguments)；
+}
+```
+```
+app.handle = function(req, res, out) {
+	next();
+}
+```
+next()方法原理就是取出队列中的中间件并执行，同时传入当前方法以实现递归调用,达到持续出发的目的。
+
+```
+function next(err) {
+	layer = stack[index++];
+	
+	layer.handle(req, res, next);
+}
+```
+另外一个知名的流程控制模块async，通过npm install安装
+
+async.series()用于处理异步的串行执行
+
+```
+async.series([
+	function(callback) {
+		fs.readFile();
+	},
+	function(callback) {
+		fs.readFile();
+	}
+], function(err, results) {
+	
+})
+```
+
+async.parallel()用于异步的并行执行
+
+```
+async.parallel([
+	function(callback) {
+		fs.readFile();
+	},
+	function(callback) {
+		fs.readFile();
+	}
+], function(err, results) {
+	
+})
+```
+
+async.waterfall()用于异步调用的依赖处理
+
+```
+async.waterfall([
+	function(callback) {
+		fs.readFile('file1.txt', 'utf-8', function(err, content) {
+			callback(err, content);
+		});
+	},
+	function(arg1, callback) {
+		// arg1 => file2.txt
+		fs.readFile(arg1, 'utf-8', function(err, content) {
+			callback(err, content);
+		});
+], function(err, results) {
+	// results => file3.txt
+
+})
+```
+
+async.auto()用于自动依赖处理
+
+另一个流程控制库是Step，通过npm install step安装
+
+#### 异步并发控制
+bagpipe模块
+
+* 通过一个队列来控制并发量
+* 如果当前活跃（指调用发起但未执行回调）的异步调用量小于限定值，从队列中取出执行
+* 如果活跃调用达到了限定值，调用暂时存放在队列中
+* 每个异步调用结束，从队列中取出新的异步调用执行
+
+
+
