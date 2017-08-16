@@ -636,3 +636,121 @@ console.log(300)  // 待所有程序执行完，处于空闲状态，会立马�
 	* 定时任务：setTimeout, setInterval
 	* 网络请求，动态`<img>`加载
 	* 事件绑定
+
+## 其他JS知识：
+#### 日期
+```
+Date.now() // 获取当前时间的毫秒数
+var dt = new Date()
+dt.getTime() // 获取毫秒数
+dt.getFullYear() // 年
+dt.getMonth() // 月(0 - 11)
+dt.getDate() // 日(0 - 31)
+dt.getHours() // 小时(0 - 23)
+dt.getMinutes() // 分钟(0 - 59)
+dt.getSeconds() // 秒(0 - 59)
+```
+
+#### Math
+获取随机数 Math.random()
+
+
+#### 数组API
+* `forEach` 遍历所有元素
+
+```
+var arr = [1, 2, 3]
+arr.forEach(function(item, index) {
+	// 遍历数组的所有元素
+	console.log(index, item)
+})
+```
+
+* `every` 判断所有元素是否都符合条件
+
+```
+var arr = [1, 2, 3]
+var result = arr.every(function(item, index) {
+	// 用来判断所有的数组元素，都满足一个条件
+	if (item < 4) {
+		return true
+	}
+})
+console.log(result)
+```
+
+* `some` 判断是否有至少一个元素符合条件
+
+```
+var arr = [1, 2, 3]
+var result = arr.some(function(item, index) {
+	// 用来判断所有的数组元素，都满足一个条件
+	if (item < 2) {
+		return true
+	}
+})
+console.log(result)
+```
+
+* `sort` 排序
+
+```
+var arr = [1, 4, 2, 3, 5]
+var arr2 = arr.sort(function(a, b) {
+	// 从小到大排序
+	return a - b
+	
+	//从大到小排序
+	// return b - a	
+})
+console.log(arr2)
+```
+
+* `map` 对元素重新组装，生成新数组
+
+```
+var arr = [1, 2, 3, 4]
+var arr2 = arr.map(function(item, index) {
+	// 将元素重新组装，并返回
+	return '<b>' + item + '<b>'
+})
+console.log(arr2)
+```
+
+* `filter` 过滤符合条件的元素
+
+```
+var arr = [1, 2, 3]
+var arr2 = arr.filter(function(item, index) {
+	// 通过某一个条件过滤数组
+	if (item >= 2) {
+		return true
+	}
+})
+console.log(arr2)
+```
+
+#### 对象API
+
+```
+var obj = {
+	x: 100,
+	y: 200,
+	z: 300
+}
+var key
+for( key in obj) {
+	// 注意这里的hasOwnProperty,在讲原型的时候讲过
+	if (obj.hasOwnProperty(key)) {
+		console.log(key, obj[key])
+	}
+}
+```
+
+## 对应题目：
+
+* #### 获取2017-xx-xx 格式的日期
+
+* #### 获取随机数，要求长度一致的字符串格式
+
+* #### 写一个能遍历对象和数组的通用forEach函数
