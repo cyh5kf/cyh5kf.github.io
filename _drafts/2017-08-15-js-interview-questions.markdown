@@ -112,8 +112,6 @@ typeof只能区分值类型的详细类型，无法区分引用类型
 
 * #### window.onload和DOMContentLoaded的区别（浏览器的渲染过程）
 
-* #### 用JS创建10个`<a>`标签，点击的时候弹出来对应的序号（作用域）
-
 * #### 简述如何实现一个模块加载器，实现类似一个require.js的功能（JS模块化）
 
 * #### 实现数组的随机排序（JS基础算法）
@@ -300,9 +298,341 @@ f的__proto__一层一层往上，能否对应到Foo.prototype
 	阅读源码在面试中会有加分
 	
 	
+## 知识点讲解，作用域和闭包：
+#### 执行上下文
 
+* 范围：一段`<script>`或者一个函数
+* 全局：变量定义、函数声明 一段`<script>`
+* 函数：变量定义、函数声明、this、arguments  函数
 
+PS：注意“函数声明”和“函数表达式”的区别
 
+```
+// 全局作用域
+consolo.log(a); // undefined
+var a = 100;  //变量声明会提前，但是不会赋值
 
+fn('zhangsan') // 'zhangsan' 20
+function fn(name) { //函数声明会提前
+	// 函数作用域
+	console.log(this);  // window对象
+	console.log(arguments);  // [zhangsan ...]
+	
+	age = 20;
+	console.log(name, age);
+	var age;
+	
+	bar(100);  // 100
+	function bar(num) {
+		console.log(num)
+	}
+}
+```
 
+```
+fn()  //先把函数声明提前
+function fn() {
+	// 函数声明
+}
 
+fn1() // 这里fn1是undefined,执行会报错
+var fn1 = function() {
+	// 函数表达式
+}
+```
+
+#### this
+this要在执行时才能确认，定义时无法确认
+
+```
+var a = {
+	name: 'A',
+	fn: function() {
+		console.log(this.name);
+	}
+}
+a.fn(); // 'A'  this === a
+a.fn.call({name: 'B'})  // 'B'   this === {name: 'B'}
+var fn1 = a.fn;
+fn1()  //''  this === window
+```
+* 作为构造函数执行
+
+```
+function Foo(name) {
+	this.name = name
+}
+var f = new Foo('zhangsan')
+```
+* 作为对象属性执行
+
+```
+var obj = {
+	name: 'A',
+	printName: function() {
+		cosole.log(this.name);
+	}
+}
+obj.printName()  // 'A'
+```
+* 作为普通函数执行
+
+```
+function fn() {
+	console.log(this)  // window
+}
+fn()
+```
+* call apply bind
+
+```
+function fn1(name, age) {
+	alert(name)
+	console.log(this)  // window
+}
+fn1.call({x: 100}, 'zhangsan', 20)  // 第一个参数作为this， 之后的参数作为函数的参数传入
+fn1.apply({x: 100}, ['zhangsan', 20])  //apply会把后面的参数当做数组传递
+
+var fn2 = function(name, age) {
+	alert(name)
+	console.log(this)  // window
+}.bind({y: 200})  //bind指定this指向的对象
+fn2('zhangsan', 20)
+```
+
+#### 作用域
+* JS没有块级作用域
+* 只有函数和全局作用域
+
+```
+// 无块级作用域
+if (true) {
+	var name = 'zhangsan'
+}
+console.log(name)
+
+// 函数和全局作用域
+var a = 100
+function fn() {
+	var a = 200
+	console.log('fn', a)
+}
+console.log('global', a)
+fn()
+```
+
+#### 作用域链
+
+```
+var a = 100;
+function fn() {
+	var b = 200;
+	
+	// 当前作用域没有定义的变量，即‘自由变量’
+	// 当前作用域没有定义就去父级作用域（全局作用域）去找
+	// 函数的父级作用域是函数定义时所在的父级作用域，不是函数执行时所在的父级作用域
+	console.log(a) // 100
+	console.log(b) // 200
+}
+fn()
+```
+```
+//当前作用域没有定义，一直往父级作用域找，直到全局作用域
+var a = 100;
+function F1() {
+	var b = 200;
+	function F2() {
+		var c = 300;
+		console.log(a); // a是自由变量
+		console.log(b); // b是自由变量
+		console.log(c);
+	}
+	F2()
+}
+F1()
+```
+
+#### 闭包
+闭包的使用场景
+
+* 函数作为返回值(上面这个demo)
+
+```
+function F1() {
+	var a = 100;
+	
+	// 返回一个函数（函数作为返回值）
+	return function() {
+		console.log(a)
+	}
+}
+// f1得到一个函数
+var f1 = F1();
+var a = 200;
+f1();
+```
+* 函数作为参数传递
+函数的作用域始终是函数定义时候的作用域
+
+```
+function F1() {
+	var a = 100;
+	
+	// 返回一个函数（函数作为返回值）
+	return function() {
+		console.log(a)
+	}
+}
+// f1得到一个函数
+var f1 = F1();
+function F2(fn) {
+	var a = 200;
+	fn()
+}
+F2(f1)
+```
+
+## 对应题目：
+* #### 说一下对变量提升的理解
+	变量定义
+
+	函数声明（注意和函数表达式的区别）
+
+* #### 说明this几种不同的使用场景
+	* 作为构造函数执行
+	* 作为对象属性执行
+	* 作为普通函数执行
+	* call apply bind
+
+* #### 创建10个`<a>`标签，点击的时候弹出对应的序号
+	自执行函数，就是不用调用，只要定义完成，就立即执行的函数
+
+	```
+	var i;
+	for (i = 0; i < 10; i++) {
+		(function(i) {
+			var a = document.createElement('a');
+			a.innerHTML = i + '<br>';
+			a.addEventListener('click', function(e) {
+				e.preventDefault();
+				alert(i);  // i是自由变量，要去父作用域获取值
+			})
+			document.body.appendChild(a);
+		})(i)
+	}
+	```
+
+* #### 如何理解作用域
+	* 自由变量
+	* 作用域链，即自由变量的查找
+	* 闭包的两个场景
+
+* #### 实际开发闭包的应用
+	```
+	// 闭包实际应用中主要用于封装变量，收敛权限
+	// 这里把存储的数据封装在函数内部，函数外部是拿不到修改变量的权限，外部拿到的只是返回的函数
+	function isFirstLoad() {
+		var _list = [];  // 带有下划线的变量表明是自定义私有变量
+		return function(id) {  // _list是自由变量，要去父级作用域找
+			if (_list.indexOf(id) >= 0) {
+				return false;
+			} else {
+				_list.push(id);
+				return true;
+			}
+		}
+	}
+	
+	// 使用
+	var firstLoad = isFirstLoad();
+	firstLoad(10) // true
+	firstLoad(10)  // false
+	firstLoad(20) // true
+	```
+
+## 知识点讲解，异步和单线程：
+#### 什么是异步(对比同步)
+
+```
+console.log(100);
+// 异步操作
+setTimeout(function() {
+	console.log(200)
+}, 1000)
+console.log(300)
+```
+```
+// 同步操作
+// 同步会阻塞下面代码执行
+console.log(100);
+alert(200);
+console.log(300);
+```
+#### 何时使用异步
+* 在可能发生等待的情况
+* 等待过程中不能像alert一样阻塞程序的执行
+* 因此，所有的“等待的情况”都需要异步
+
+#### 前端使用异步的场景
+* 定时任务：setTimeout, setInterval
+* 网络请求，动态`<img>`加载
+* 事件绑定
+
+```
+console.log('start')
+$.get('./data.json', function(data1) {
+	console.log(data1);
+})
+console.log('end')
+```
+```
+console.log('start');
+var img = document.createElement('img')
+img.onload = function() {
+	console.log('loaded')
+}
+img.src = '/xxx.png'
+console.log('end')
+```
+```
+console.log('start')
+document.getElementById('btn1').addEventListener('click', function() {
+	alert('clicked')
+})
+console.log('end')
+```
+
+#### 异步和单线程
+
+```
+console.log(100)
+setTimeout(function() { //所有异步的操作都会暂存起来，不会立即执行
+	console.log(200)
+})
+console.log(300)  // 待所有程序执行完，处于空闲状态，会立马看有没有暂存起来要执行
+//发现暂存起来的setTimeout函数无需等待时间，就立即过来执行
+```
+单线程是程序只能一个一个依次执行，不能同时干两件事
+
+## 对应题目：
+* #### 同步和异步的区别是什么？分别举一个同步和异步的例子
+	* 同步会阻塞代码执行，而异步不会
+	* alert是同步， setTimeout是异步
+
+* #### 一个关于setTimeout的面试题
+	```
+	console.log(1)
+	setTimeout(function() {
+		console.log(2)
+	}, 0)
+	console.log(3)
+	setTimeout(function() {
+		console.log(4)
+	}, 1000)
+	console.log(5)
+	```
+
+* #### 前端使用异步的场景有哪些？
+	* 定时任务：setTimeout, setInterval
+	* 网络请求，动态`<img>`加载
+	* 事件绑定
