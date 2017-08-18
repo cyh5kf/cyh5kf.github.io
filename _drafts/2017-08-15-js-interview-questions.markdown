@@ -213,7 +213,7 @@ f instanceof Foo的判断逻辑是：
 
 f的__proto__一层一层往上，能否对应到Foo.prototype
 
-再试着判断 f instanceof Object,同理也是通过__proto__网上找
+再试着判断 f instanceof Object,同理也是通过__proto__往上找
 
 ## 对应题目：
 * #### 如何准确判断一个变量是数组类型
@@ -751,6 +751,67 @@ for( key in obj) {
 
 * #### 获取2017-xx-xx 格式的日期
 
+	```
+	function formatDate(dt) {
+		if (!dt) {
+			dt = new Date()
+		}
+		var year = dt.getFullYear()
+		var month = dt.getMonth() + 1
+		var date = dt.getDate()
+		if (month < 10) {
+			// 强制类型转换
+			month = '0' + month
+		}
+		if (date < 10) {
+			//强制类型转换
+			date = '0' + date
+		}
+		//强制类型转换
+		return year + '-' + month + '-' + date
+	}
+	var dt = new Date()
+	var formatDate = formatDate(dt)
+	console.log(formatDate)
+	```
+
 * #### 获取随机数，要求长度一致的字符串格式
 
+	```
+	var random = Math.random()
+	random = random + '0000000000' //后面加上10个零
+	random = random.slice(0, 10)
+	// random = random.toFixed(8)
+	console.log(random)
+	```
+
 * #### 写一个能遍历对象和数组的通用forEach函数
+
+	```
+	function forEach(obj, fn) {
+		var key
+		if (obj instanceof Array) {
+			obj.forEach(function(item, index) {
+				fn(index, item)
+			})
+		} else {
+			// 不是数组就是对象
+			for (key in obj) {
+				if (obj.hasOwnProperty(key)) {
+					fn(key, obj[key])
+				}
+			}
+		}
+	}
+	
+	var arr = [1, 2, 3]
+	// 注意这里的参数顺序换了，为了和对象的遍历格式保持一致
+	forEach(arr, function(index, item) {
+		console.log(index, item)
+	})
+	
+	var obj = {x: 100, y: 200}
+	forEach(obj, function(key, value) {
+		console.log(key, value)
+	})
+	```
