@@ -257,3 +257,201 @@ console.log(baz()); // 得到局部变量
 
 在js执行中，无法立即回收的内存有闭包和全局变量引用这两种情况。
 
+#### 内存指标
+进入node执行环境，调用process.memoryUsage()可以看到node进程的内存占用情况。
+
+os.totalmem()和os.freemem()分别查看系统的总内存和限制内存。
+
+#### 内存泄漏
+* 缓存
+* 队列消费不及时
+* 作用域未释放
+
+#### 大内存应用
+由于V8的内存限制，无法通过fs.readFile()和fs.writerFile()直接进行大文件操作，而改用fs.createrReadStream()和fs.createrWriterStream()方法通过流的方式实现对大文件的操作。
+
+```
+var reader = fs.createReadStream('in.txt');
+var writer = fs.createrWriteStream('out.txt');
+reader.on('data', function(chunk) {
+	writer.writer(chunk);
+})
+reader.on('end', function() {
+	wirter.end();
+}
+```
+可读流提供管道方法pipe()，封装了data事件和写入操作。
+
+```
+var reader = fs.createReadStream('in.txt');
+var writer = fs.createrWriteStream('out.txt');
+reader.pipe(writer);
+```
+
+### 理解Buffer
+#### Buffer结构
+Buffer是个向Array的对象，但它主要用于操作字节
+
+Buffer是一个js与C++结合的模块，性能相关部分用C++实现，非性能部分用js实现。
+
+Buffer在进程启动时就已经加载了，放在全局对象上，所以在使用Buffer时，无须通过require()即可直接使用。
+
+Buffer对象类似于数组，它的元素为16进制的两位数，即0到255的数值。
+
+```
+var str = "深入浅出node.js";
+var buf = new Buffer(str, 'utf-8');
+console.log(buf);
+// => <Buffer e6 b7 85 a5...>
+```
+可以访问length属性得到长度
+
+```
+var buf = new Buffer(100);
+console.log(buf.length); // => 100
+```
+可以通过下标访问元素,元素值是一个0-255的随机值
+
+```
+console.log(buf[10]);
+```
+```
+buf[10] = 100;
+console.log(buf[10]); // 100
+buf[20] = -100;
+console.log(buf[20]); // 156
+buf[21] = 300;
+console.log(buf[21]); // 44
+buf[22] = 3.1415;
+console.log(buf[22]); // 3
+```
+给元素的赋值小于0，就将该值逐次加256，直到得到一个0到255之间的整数。如果得到的数值大于255，就逐次见256，直到得到0~255区间内的数值。如果是小数，舍弃小数部分，只保留整数部分。
+
+#### Buffer的转换
+* 字符串转Buffer
+
+```
+new Buffer(str, [encoding]);
+```
+
+* Buffer转字符串
+
+```
+buf.toString([encoding], [start], [end]);
+```
+
+#### Buffer的拼接
+
+```
+var fs = require('fs');
+var rs = fs.createReadStream('test.md');
+var data = '';
+rs.on("data", function (chunk) {
+	data += chunk;
+}
+rs.on("end", function () {
+	console.log(data)
+}
+```
+data事件中获取的chunk对象即是Buffer对象。但是这种方法如果存在中文字符，得到的结果可能会产生乱码。
+
+#### 正确拼接Buffer
+将多个小Buffer对象拼接成一个Buffer对象，然后通过iconv-lite模块来转码
+
+```
+var chunks = [];
+var size = 0;
+res.on('data', function() {
+	chunks.push(chunk);
+	size += chunk.length;
+}
+res.on('end', function() {
+	var buf = Buffer.concat(chunks, size);
+	var str = iconv.decode(buf, 'utf8');
+	console.log(str);
+});
+```
+
+在网络中传输字符串，都需要转换成Buffer，以进行二进制数据传输，可以提高传输性能。
+
+
+### 网络编程
+node提供了net、dgram、http、https这四个模块，分别处理TCP、UDP、HTTP、HTTP。
+
+#### TCP
+TCP属于传输层协议，TCP是面向连接的协议，其显著的特征是在传输之前需要3次握手形成绘画。客户端——服务器端，请求连接-》响应—》开始传输。
+
+构建一个tcp服务
+
+```
+// client.js
+var net = require('net');
+var client = net.connect({port:8124}, function() {
+	console.log('client connected');
+	client.write('world!\r\n');
+})
+
+client.on('data', function(data) {
+	console.log(data.toString());
+	client.end();
+})
+
+client.on('end', function() {
+	console.log('client disconnected');
+})
+
+node client.js
+```
+
+#### UDP服务
+UDP又称用户数据包协议，与TCP一样同属于网络传输层。它无需连接，资源消耗低，处理快速灵活，所以常常应用在那种偶尔丢一两个数据包也不会产生重大影响的场景，比如音频、视频等。
+
+创建一个UDP套接字
+
+```
+var dgram = require('dgram');
+var socket = dgram.createSocket("udp4");
+```
+创建UDP服务器端示例：
+
+```
+var dgram = require('dgram");
+var server = dgram.sreateSocket("udp4");
+server.on("message", function(msg, rinfo) {
+	console.log("server got: " + msg + " from " + rinfo.address + ":" + rinfo.port);
+});
+
+server.on("listening", function() {
+	var address = server.address();
+	console.log("server listening " + address.address + ":" + address.port);
+});
+server.bind(41234);
+```
+
+创建UDP客户端
+
+```
+// client.js
+var dgram = require('dgram');
+var message = new Buffer("深入浅出node.js");
+var client = dgram.createSocket("udp4");
+client.send(message, 0, message.length, 41234, "localhost", function(err, bytes) {
+	client.close();
+})
+
+执行命令 node server.js
+```
+
+#### 构建HTTP服务
+实现一个http服务器：
+
+```
+var http = require('http');
+http.createServer(function (req,res) {
+	res.writeHead(200, {'Content-Type': 'text/plain'});
+	res.end('Hello World\n');
+}).listen(1337, '127.0.0.1');
+console.log('Server running at http://127.0.0.1:1337/');
+```
+
+HTTP构建在TCP之上，属于应用层协议。在HTTP的两端是服务器和浏览器，即著名的B/S模式，web即是HTTP的应用。
