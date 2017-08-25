@@ -815,3 +815,378 @@ for( key in obj) {
 		console.log(key, value)
 	})
 	```
+	
+## JS-web-api
+只管定义用于浏览器JS操作页面API和全局变量（window、document、navigator.userAgent...）
+常说的JS包含两个部分：JS基础知识（ECMA标准）和JS-Web-API(W3C标准)
+
+## DOM操作(document object model)
+#### DOM本质
+DOM树，一种浏览器可识别的数据结构，由各种标签组成，方便js的API去操作。
+
+#### DOM节点操作
+面试中不要说用起来很熟，但不知道实现原理的东西
+
+* 获取DOM
+
+	```
+	document.getElementById()
+	
+	document.getElementsByTagName()
+	
+	document.querySelectorAll()
+	
+	document.querySelector()
+	```
+* property
+
+	JS对象的属性
+	
+	```
+	var obj = {x:100, y:200};
+	console.log(obj.x); // 100
+	
+	var p = document.getElementsByTagName('p')[0];
+	cosole.log(p.nodeName) // P
+	```
+* attribute
+	HTML标签的属性
+
+	```
+	var pList = document.querySelector('p');
+	var p = pList[0];
+	p.getAttribute('data-name');
+	p.setAttribute('data-name', 'imooc');
+	p.getAttribute('style');
+	p.setAttribute('style', 'font-size:30px');
+	```
+
+#### DOM结构操作
+* 新增节点
+
+	```
+	var div1 = document.getElementById('div1');
+	// 添加新节点
+	var p1 = document.createElement('p');
+	p1.innerHTML = 'this is p1';
+	div1.appendChild(p1); // 添加新创建的元素
+	// 移动已有节点
+	var p2 = document.getElementById('p2');
+	div1.appendChild(p1);
+	```
+* 获取父元素
+* 获取子元素
+* 删除节点
+
+	```
+	var div1 = document.getElementById('div1');
+	var parent = div1.parentElement;
+	
+	var child = div1.childNodes;
+	div1.removeChild(child[0]);
+	
+	div.childNode[0].nodeType  //3	3表示空格或者换行符
+	div.childNode[1].nodeType  //1  1表示html标签节点
+	div.childNode[0].nodeName  //#text
+	div.childNode[1].nodeName  // P
+	```
+
+## 对应题目：
+* #### DOM是哪种基本的数据结构？
+树
+
+* #### DOM操作的常用API有哪些？
+获取DOM节点，以及节点的property和Attribute
+
+获取父节点，获取子节点
+
+新增节点，删除节点
+
+* #### DOM节点的attr和property 有何区别？
+
+property只是一个JS对象的属性的修改
+Attribute是对html标签属性的修改
+
+## BOM操作（Browser Object Model）
+#### navigator
+
+```
+var ua = navigator.userAgent
+var isChrome = ua.indexOf('Chrome')
+console.log(isChrome)
+```
+#### screen
+
+```
+console.log(screen.width)
+console.log(screen.height)
+```
+#### location
+
+```
+console.log(location.href) // 整个url
+console.log(location.protocol) // 协议 'http:' 'https:'
+console.log(location.host) //域名
+console.log(location.pathname) // 路径  '/learn/199'
+console.log(location.search) // ?后面的参数
+console.log(location.hash) // #后面的hash
+```
+#### history
+
+```
+history.back()
+history.forward()
+```
+## 对应题目：
+* #### 如何检测浏览器的类型
+
+* #### 拆解url的各部分
+
+## 事件
+#### 通用事件绑定
+
+```
+var btn = document.getElementById('btn1')
+btn.addEventListener('click', function (event) {
+	console.log('click')
+})
+
+function bindEvent(elem, type, fn) {
+	elem.addEventListener(type, fn)
+}
+var a = document.getElementById('link1')
+bindEvent(a, 'click', function(e) {
+	e.preventDefault() // 阻止默认行为
+	alert('clicked')
+})
+```
+关于IE低版本的兼容性
+
+IE低版本使用attachEvent绑定事件，和W3C标准不一样
+
+IE低版本使用量已经非常少了，很多网站都不支持了
+
+对IE低版本的兼容性：了解即可，无需深究
+
+如果对IE低版本要求苛刻的面试，果断放弃
+#### 事件冒泡
+
+```
+<div id="div1">
+	<p id="p1">激活</p>
+	<p id="p2">取消</p>
+</div>
+<div id="div1">
+	<p id="p3">取消</p>
+	<p id="p4">取消</p>
+</div>
+
+var p1 = document.getElementById('p1')
+var body = document.body
+bindEvent(p1, 'click', function() {
+	e.stopPropagation() // 阻止事件冒泡
+	alert('激活')
+})
+bindEvent(body, 'click', function(e){
+	alert('取消')
+})
+```
+#### 代理
+好处：
+
+代码简洁
+
+减少浏览器内存占用
+
+```
+<div id="div1">
+	<a href="#">a1</a>
+	<a href="#">a2</a>
+	<a href="#">a3</a>
+	<a href="#">a4</a>
+	<!--会随时新增更多的a标签-->
+</div>
+
+var div1 = document.getElementById('div1')
+div1.addEventListener('click', function(e) {
+	var target = e.target //可以拿到真实触发事件的元素
+	if (target.nodeName === 'A') {
+		alert(target.innerHTML)
+	}
+})
+```
+## 对应题目：
+* #### 编写一个通用的事件监听函数
+	```
+	// selector表示是否使用代理
+	function bindEvent(elem, type, selector, fn) {
+		if (fn === null) {
+			fn = selector
+			selector = null
+		}
+		elem.addEventListener(type, function(e) {
+			var target
+			if (selector) { // 使用代理
+				target = e.target
+				if (target.matches(selector)) { //target是否符合代理目标的元素
+					fn.call(target, e)
+				}
+			} else { // 不使用代理
+				fn(e)
+			}
+		})
+	}
+	
+	// 使用代理
+	var div1 = document.getElementById('div1')
+	bindEvent(div1, 'click', 'a', function (e) {
+		console.log(this.innerHTML)
+	})
+	
+	// 不使用代理
+	var a = document.getElementById('a1')
+	bindEvent(div1, 'click', function (e) {
+		console.log(a.innerHTML)
+	})
+	```
+
+* #### 描述事件冒泡
+
+	DOM树形结构
+	
+	事件冒泡
+	
+	阻止冒泡
+	
+	冒泡的应用
+
+* #### 对于一个无线下拉加载图片的页面，如何给每个图片绑定事件
+
+	使用代理
+
+	代理的好处
+
+
+## Ajax
+#### XMLHttpRequest
+```
+var xhr = new XMLHttpRequest();
+xhr.open("GET", "/api", false);  // false使用异步
+xhr.onreadystatechange = function() {
+	// 这里的函数异步执行，可参考之前的JS基础中的异步模块
+	if (xhr.readyState == 4) {
+		if (xhr.status == 200) {
+			alert(xhr.responseText)
+		}
+	}
+}
+xhr.send(null)
+```
+
+IE兼容性问题
+
+* IE低版本使用ActiveXObject，和W3C标准不一样
+* IE低版本使用量已经非常少，很多网站早已不支持
+* 建议对IE的低版本兼容性，了解即可，无需深究
+
+#### 状态码说明
+readyState
+
+* 0 - (未初始化)还没调用send方法
+* 1 - (载入)已经调用send方法，正在发送请求
+* 2 - (载入完成)send方法已经执行完成，已经接收到全部响应内容
+* 3 - (交互)正在解析响应内容
+* 4 - (完成)响应内容解析完成，可以在客户端调用了
+
+status
+
+* 2xx - 表示成功处理请求。如200
+* 3xx - 需要重定向，浏览器直接跳转
+* 4xx - 客户端请求错误。如404
+* 5xx - 服务器端错误
+
+#### 跨域
+浏览器有同源策略，不允许ajax访问其他域接口
+
+跨域条件：协议、域名、端口，有一个不同就算跨域
+
+可以跨域的三个标签：
+
+* `<img src="xxx">`
+
+	`<img>	`用于打点统计，统计网站可能是其他域
+
+* `<link href=xxx>`
+
+	`<link>``<script>`可以使用CDN,CDN的也是其他域
+
+* `<script src=xxx>`
+
+	`<script>`可以用于JSONP
+	
+跨域注意事项
+
+* 所有的跨域请求都必须经过信息提供方允许
+* 如果未经允许即可获取，那是浏览器同源策略出现漏洞
+
+JSONP实现原理
+利用script标签跨域加载其他域的资源
+
+服务器端跨域设置 http header
+
+```
+// 第二个参数填写允许跨域的域名称，不建议直接写“*”
+response.setHeader("Access-Control-Allow-Origin", "http://a.com", "http://b.com")
+response.setHeader("Access-Control-Allow-Headers", "X-Requested-With")
+response.setHeader("Access-Control-Allow-Origin", "PUT,GET,POST,DELETE,OPTIONS")
+
+// 接受跨域的cookie
+response.setHeader("Access-Control-Allow-Credentials", "true")
+```
+
+## 对应题目：
+* #### 手动编写一个ajax库，不依赖第三方库
+
+* #### 跨域的几种实现方式
+
+
+## 存储
+#### cookie
+* 本身用于客户端和服务器端通信
+* 但是它有本地存储的功能，于是就被借用
+* 使用document.cookie=... 获取和修改即可
+
+#### cookie存储的缺点
+* 存储量太小，只有4KB(与服务器端通信)
+* 所有http请求都带着，会影响获取资源的效率
+* API简单，需要封装才能使用 document.cookie = ...
+
+#### localStorage和sessionStorage
+* HTML5专门为存储设计，最大容量为5M(不用在请求中带着)
+* API简单易用
+* localStorage.setItem(key, value); localStorage.getItem(key)
+* IOS safari隐藏模式下，localStorage.getItem会报错，建议统一使用try-catch封装
+
+## 对应题目：
+* #### 请描述cookie,sessionStorage,和localStorage的区别
+	1. 容量
+	2. 是否会携带到ajax中
+	3. API易用性
+
+
+## 开发环境
+
+### IDE
+webstorm sublime vscode atom
+
+### git
+coding.net  github.com
+
+### JS模块化
+
+### 打包工具
+
+### 上线回滚的流程
+
+
+
