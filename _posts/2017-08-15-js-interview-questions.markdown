@@ -1145,6 +1145,7 @@ response.setHeader("Access-Control-Allow-Credentials", "true")
 ```
 
 ## 对应题目：
+
 * #### 手动编写一个ajax库，不依赖第三方库
 
 * #### 跨域的几种实现方式
@@ -1180,13 +1181,234 @@ response.setHeader("Access-Control-Allow-Credentials", "true")
 webstorm sublime vscode atom
 
 ### git
-coding.net  github.com
+coding.net(国内)  github.com(国外)
 
 ### JS模块化
+通过script标签引入js文件的方式不足：
 
-### 打包工具
+1. 这些代码中的函数必须是全局变量，才能暴露给使用方，全局变量污染。
+2. 依赖关系不明确
 
-### 上线回滚的流程
+#### AMD 异步模块定义规范
+工具：require.js，定义全局的define函数和require函数，依赖JS会自动异步加载
+
+```
+// a.js define定义
+define(['./a-util.js'], function (aUtil) {
+	return {
+		printDate: function (date) {
+			console.log(aUtil.aGetFormatDate(date))
+		}
+	}
+})
+
+// main.js  require引入
+require(['./a.js'], function (a) {
+	var date = new Date()
+	a.printDate(date)
+})
+
+<script src="/require.min.js" data-main="./main.js"></script>
+```
+
+#### CommonJS
+nodejs模块化规范，不会异步加载JS，同步一次性加载，需要构建工具支持
+
+```
+// util.js
+module.exports = {
+	getFormatDate: function (date, type) {
+		if (type === 1) {
+			return '2017-06-15'
+		}
+		if (type === 2) {
+			return '2017年5月15日
+		}
+	}
+}
+
+// a-util.js
+var util = require('util.js')
+module.exports = {
+	aGetFormatDate: function(date) {
+		return util.getFormatDate(date, 2)
+	}
+}
+```
+
+AMD和CommonJS使用场景
+
+* 需要使用异步加载JS，使用AMD
+* 使用npm之后建议使用CommonJS
 
 
 
+## 打包工具
+webpack
+
+## 上线回滚的流程
+#### 上线
+* 将测试完成的代码提交到git版本库的master分支
+* 将当前服务器的代码全部打包并记录版本号，备份
+* 将master分支的代码提交覆盖到线上服务器，生成版本号
+
+#### 回滚
+* 将当前服务器的代码打包并记录版本号，备份
+* 将备份的上一个版本号解压，覆盖到线上服务器，并生成新的版本号
+
+linux命令
+
+`cat a.js`  查看文件全部内容
+
+`head -n 1 a.js` 查看文件前一行
+
+`tail -n 2 a.js`  查看文件后面两行
+
+`grep '2' a.js`  在文件中搜索2
+
+`vi a.js` 编辑文件
+
+
+## 安全性
+#### XSS 跨站请求攻击
+在新浪博客中写一篇文章，同时偷偷插入`<script>`，攻击代码中，获取cookie，发送到自己的服务器，发布博客，有人查看博客内容，会把查看者的cookie发送到攻击者的服务器
+
+前端替换关键字，例如替换< 为 `&lt;` > 为 `&gt;`
+
+后端替换，最好后端替换，执行效率高
+
+#### XSRF 跨站请求伪造
+比如针对一个支付接口，要增加安全性验证，如输入指纹、密码、短信验证码
+
+## 页面加载过程
+#### 加载资源的形式
+1. 	输入url（或者跳转页面）加载html
+2. 输入链接
+3. 加载html中的静态资源，js，css，视频，图片。。。
+
+#### 加载一个资源的过程
+1. 浏览器根据DNS服务器得到域名的IP地址
+2. 向这个IP的服务器发送http请求
+3. 服务器收到、处理并返回http请求
+4. 浏览器得到返回内容
+
+#### 浏览器渲染页面的过程
+1. 根据html结构生成DOM Tree
+2. 根据CSS生成CSSOM
+3. 将DOM和CSSOM整合成RenderTree
+4. 根据RenderTree开始渲染和展示
+5. 遇到`<script>`时，会执行并阻塞渲染
+
+* 为什么将css放在`head`
+
+浏览器顺序执行，先加载css，得到CSSOM，然后再生成DOM结构的时候直接整合成RenderTree，只需要渲染一次就可以了
+
+* 将js放在body最后
+
+不会阻塞页面加载，能让页面更快的渲染出来，js放在最后，js能操作所有的DOM
+
+* 图片是异步加载的
+
+## 对应题目
+* #### 从输入url到html的详细过程
+
+* #### window.onload 和 DOMContentLoaded的区别
+	
+	```
+	window.addEventListener('onload', function () {
+		// 页面全部资源加载完才会执行，包括图片，视频
+	})
+	
+	document.addEventListener('DOMContentLoaded', functioin() {
+		// DOM渲染完即可执行，此时图片、视频可能没有加载完
+	})
+	```
+
+## 性能优化
+#### 原则
+* 多使用内存、缓存或者其他方法
+* 减少CPU计算、较少网络
+
+#### 从那几方面入手
+* 加载页面和静态资源
+
+	1. 静态资源的压缩合并
+	2. 静态资源的缓存(静态资源文件加版本号) --名字不变不用请求，名字变了重新请求加载
+	3. 使用CDN让资源加载更快（不同区域的网络优化）-- bootCDN
+	4. 使用SSR后端渲染，数据直接输出到HTML中
+* 页面渲染
+
+	1. css放head里，js放body底部
+	2. 懒加载（图片懒加载、下载加载更多）
+	
+		```
+		<img id="img1" src="preview.png" data-realsrc="abc.png" />
+		<script>
+			var img1 = document.getElementById("img1")
+			img1.src = img1.getAttribute("data-realsrc")
+		</script>
+		```
+	
+	3. 减少DOM查询，对DOM查询做缓存
+
+		```
+		// 未缓存DOM查询
+		var i = 0
+		for(i = 0; i < document.getElementByTagName('p').length; i++) {
+			
+		}
+		
+		// 缓存了DOM查询
+		var pList = document.getElementByTagName('p')
+		var i
+		for(i = 0; i < pList.length; i++) {
+		
+		}
+	```
+	
+	4. 减少DOM操作，多个操作尽量合并在一起执行
+	
+		```
+		var listNode = document.getElementById('list')
+		
+		// 要插入10个li标签
+		var frag = document.createDocumentFragment();
+		var x, li;
+		for(x = 0; x < 10; x++) {
+			li = document.createElement('li')
+			li.innerHTML = "list item " + x;
+			frag.appendChild = li; //不会触发DOM操作
+		}
+		listNode.appendChild = frag;
+		```
+	
+	5. 事件节流（事件代理）
+
+		```
+		var textarea = document.getElementById('text')
+		var timeoutId;
+		textarea.addEventListener('keyup', function() {
+			if (timeoutId) {
+				clearTimeout(timeoutId)
+			}
+			timeoutId.setTimeout(function() {
+				// 触发change事件
+			}, 100)
+		})
+		```
+	
+	6. 尽早执行操作（如DOMContentLoaded）
+
+## 面试技巧
+#### 简历
+* 重点突出项目经历和解决方案，技术栈，核心的解决
+* 把个人博客放在简历中，并定期维护更新博客
+* 把个人的开源项目放在简历中，并维护开源项目
+* 简历千万不要造假，并保持能力和经历上的真实性
+
+#### 过程
+* 如何看待加班？加班就像借钱，救急不救穷，加班作为常态不太好，业余时间用来学习，交友等等
+* 千万不要挑战面试官，不要反考面试官
+* 学会给面试官惊喜，但不要太多
+* 遇到不会回答的问题，说出你知道的也可以
+* 谈谈你的缺点 -- 说一下最近学什么东西就可以
