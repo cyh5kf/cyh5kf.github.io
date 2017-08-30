@@ -4,13 +4,13 @@ title: 深入浅出nodejs读书笔记
 date: 2017-08-13 14:03:00.000000000 +08:00
 ---
 
-### nodejs的特点
+## nodejs的特点
 * 异步I/O
 * 事件与回调函数
 * 单线程
 * 跨平台
 
-### nodejs模块机制
+## nodejs模块机制
 #### nodejs采用CommonJS模块规范
 
 1.模块引用
@@ -83,7 +83,7 @@ define(function(require, exports, module) {
 ```
 require、 exports和module通过形参传递给模块，在需要依赖模块时，随时调用require()引入即可。
 
-### 异步I/O
+## 异步I/O
 #### 现实中的异步I/O是如何实现的
 通过部分线程进行阻塞I/O或者非阻塞I/O加轮询技术来完成数据的获取，让一个线程进行计算处理，通过线程之间的通信将I/O得到的数据就进行传递，这就轻松实现了异步I/O（尽管它是模拟的）。
 
@@ -220,7 +220,7 @@ bagpipe模块
 * 如果活跃调用达到了限定值，调用暂时存放在队列中
 * 每个异步调用结束，从队列中取出新的异步调用执行
 
-### 内存控制
+## 内存控制
 V8限制堆内存的大小，表层原因为V8最初为浏览器设计，不太可能遇到用大量内存的场景。深层原因是V8的垃圾回收机制的限制。
 
 在默认设置下，如果一直分配内存，在64位系统和32位系统下会分别只能使用余额1.4GB和约0.7GB的大小。
@@ -288,7 +288,7 @@ var writer = fs.createrWriteStream('out.txt');
 reader.pipe(writer);
 ```
 
-### 理解Buffer
+## 理解Buffer
 #### Buffer结构
 Buffer是个向Array的对象，但它主要用于操作字节
 
@@ -375,7 +375,7 @@ res.on('end', function() {
 在网络中传输字符串，都需要转换成Buffer，以进行二进制数据传输，可以提高传输性能。
 
 
-### 网络编程
+## 网络编程
 node提供了net、dgram、http、https这四个模块，分别处理TCP、UDP、HTTP、HTTP。
 
 #### TCP
@@ -455,3 +455,57 @@ console.log('Server running at http://127.0.0.1:1337/');
 ```
 
 HTTP构建在TCP之上，属于应用层协议。在HTTP的两端是服务器和浏览器，即著名的B/S模式，web即是HTTP的应用。
+
+#### 构建WebSocket服务
+websocket与传统http有如下好处：
+* 客户端与服务器只建立一个TCP连接，可以使用更少的连接
+* websoket服务器端可以推送数据到客户端，这远比http请求响应模式更灵活、更高效
+* 有更轻量的协议头，减少数据传输量
+
+websocket在客户端应用示例：
+
+```
+var socket = new websocket('ws://127.0.0.1:12010/updates');
+socket.onopen = function() {
+	setInterval(function() {
+		if (socket.bufferedAmount == 0)
+			socket.send(getUpdateData())
+	}, 50)
+}
+socket.onmessage = function (event) {
+	// TODO
+}
+```
+
+#### 网络安全
+node在网络安全上内置了3个模块，分别为crypto、tls、https。其中crypto主要用于加密解密，SHA1、MD5等加密算法都在其中有体现。
+
+* TLS/SSL
+TLS/SSL是一个公钥/私钥的结构，每个服务器端和客户端都有自己的公私钥。公钥用来加密要传输的数据，私钥用来解密接受到的数据。
+
+node在底层采用openssl实现TLS/SSL
+
+公私钥仍然存在中间人攻击问题，中间人扮演服务器端的角色，对服务器扮演客户端的角色。为了解决这个问题，TLS/SSL引入了数字证书来进行认证。数字证书中包含了服务器的名称和主机名、服务器的公钥、签名颁发机构的名称、来自签名颁发机构的签名。在连接建立前，会通过证书中的签名来确认收到的公钥是来自目标服务器的，从而产生信任关系。
+
+* HTTPS服务
+HTTPS服务就是工作在TLS/SSL上的HTTP。
+
+创建HTTPS服务：
+
+```
+var https = require('https');
+var fs = require('fs');
+
+var options = {
+	key: fs.readFileSync('./keys/server.key'),
+	cert: fs.readFileSync('./keys/server.crt')
+}
+
+https.createServer(options, function (req, res) {
+	res.writeHead(200);
+	res.end("hello worls/n");
+}).listen(8000);
+```
+
+
+## 构建web应用
