@@ -437,6 +437,49 @@ DOM3 `element.addEventListener('keyup',function() {}, false)` 增加鼠标，键
 
 window->document->html->body<-目标元素
 
+
+```
+<body>
+	<div id="ev">
+		<style>
+			#ev {
+				width: 300px;
+				height: 100px;
+				background: red;
+				color: #fff;
+				line-height: 100px;
+			}
+		</style>
+		目标元素
+	</div>
+	<script>
+		var ev = document.getElementById('ev');
+		window.addEventListener('click', function() {
+			console.log('widow captrue');
+		}, true)   // 捕获阶段
+		
+		document.addEventListener('click', function() {
+			console.log('document captrue');
+		}, true) 
+		
+		document.documentElement.addEventListener('click', function() {
+			console.log('html captrue');
+		}, true) 
+		
+		document.body.addEventListener('click', function() {
+			console.log('body captrue');
+		}, true) 
+		
+		ev.addEventListener('click', function() {
+			console.log('ev captrue');
+		}, true) 
+	</script>
+</body>
+```
+捕获的流程一定是从window开始从上往下按顺序执行
+
+冒泡的只需要改成false即可，方向相反，从下往上
+
 #### Event对象的常见应用
 
 1. event.preventDefault() 阻止浏览器默认行为
@@ -447,9 +490,162 @@ window->document->html->body<-目标元素
 
 #### 自定义事件
 ```
-var eve = new Event('custome')
-ev.addEventListener('custome', function () {
-	console.log('custome')
-})
-ev.dispatchEvent('eve')
+<body>
+	<div id="ev">
+		<style>
+			#ev {
+				width: 300px;
+				height: 100px;
+				background: red;
+				color: #fff;
+				line-height: 100px;
+			}
+		</style>
+		目标元素
+	</div>
+	<script>
+		var ev = document.getElementById('ev');
+		var eve = new Event('test')
+		ev.addEventListener('custome', function () {
+			console.log('test dispatch')
+		})
+		ev.dispatchEvent('eve')
+	</script>
+</body>
 ```
+
+### HTTP协议类
+* HTTP协议的主要特点
+	
+简单快速（url资源是固定的）
+
+灵活（http有头部分，通过http协议完成不同数据的传输）
+
+无连接（传输一次就会断掉）
+
+无状态（无法区分两次连接的身份）
+
+* HTTP报文的组成部分
+	请求报文：请求行，请求头，空行，请求体
+	
+	请求行：http方法，页面地址，http协议，版本   GET / HTTP/1.1
+	
+	请求头：key，value值告诉服务器端要请求哪些类型内容  host往下都是
+	
+	空行：告诉服务器端往下解析请求体
+	
+	请求体：数据部分
+	
+	响应报文：状态行，响应体，空行，响应体
+
+* HTTP方法
+	GET -- 获取资源
+	
+	POST -- 传输资源
+	
+	PUT -- 更新资源
+	
+	DELETE -- 删除资源
+	
+	HEAD -- 获得报文首部
+
+* POST和GET的区别
+
+	* GET在浏览器回退时时无害的，而POST会再次提交请求（重点）
+	* GET产生的URL可以被收藏，post不可以
+	* GET请求会被浏览器主动缓存，POST不会，除非手动设置（重点）
+	* GET请求参数会被完整保留在浏览器历史记录里，而POST参数不会被保留（重点）
+	* GET请求在URL传送的参数室友长度限制的，太长会被截断，而POST没有限制（重点）
+	* GET比POST更不安全，因为参数直接暴露在URL上，所以不能用来传递敏感信息
+	* GET参数通过URL传递，POST放在Request body中（重点）
+	
+* HTTP状态码
+
+	* 1xx: 表示请求已接收，继续处理
+	* 2xx：成功-请求成功
+	* 3xx: 重定向，要完成请求必须进行更进一步的操作
+	* 4xx：客户端错误-请求有语法错误或请求无法实现
+	* 5xx：服务器错误-服务器未能实现合法的请求
+
+	* 200 OK：客户端请求成功
+	* 301 Moved Permanently: 所请求的页面已经转移到新的url
+	* 302 Found：所请求的页面已经临时转移到新的url
+	* 304 Not Modified: 客户端有缓冲的文档并发出一个条件性的请求，服务器告诉客户，原来缓冲的文档还可以继续使用
+	* 401：客户端有语法错误，不能被服务器所理解
+	* 402： 请求未授权
+	* 403： 对被请求页面的访问被禁止
+	* 404：请求资源不存在
+	* 500：服务器发生不可预期的错误原来缓冲的文档还可以继续使用
+	* 503：请求未完成，服务器临时过载或当机，一段时间后可能恢复正常
+	
+* 什么是持久连接(前提是1.1版本，1.0不支持）
+
+	http协议采用请求-应答模式，当使用普通模式，即非keep-alive模式时，每个请求/应答客户端和服务器端都要新建一个连接，完成之后立即断开连接（HTTP协议为无连接的协议）
+	
+	当使用keep-alive模式（又称持久连接、连接重用）时，keep-alive功能是客户端到服务器端的连接持续有效，当出现对服务器端的后续请求时，keep-alive功能避免了简历或者重新建立连接。
+	
+* 什么是管线化
+
+	在使用持久连接的情况下，请求1 -> 响应1 -> 请求2 -> 响应2 -> 请求3 -> 响应3
+	
+	管线化，将请求打包一次传输，将响应打包一次传输，某个连接上的消息变成这样：
+	
+	请求1 -> 请求2 -> 请求3 -> 响应1 -> 响应2 -> 响应3
+	
+	* 管线化通过持久连接完成，仅http/1.1支持
+	* 只有GET和HEAD请求可以进行管线化，POST有所限制
+	* 初次创建时不应启动管线限制。
+
+	
+### 原型链类
+
+* 创建对象有几种方法
+
+	```
+	// 第一种方式：字面量
+    var o1 = { name: 'o1' }
+    var o2 = new Object({ name: 'o2' })
+    // 第二种方式：通过构造函数
+    var M = function(name) { this.name = name }
+    var o3 = new M('o3')
+    // 第三种：Object.create
+    var P = { name: 'p' }
+    var o4 = Object.create(p)
+	```
+* 原型、构造函数、实例、原型链
+
+	构造函数通过new生成实例，任何函数都可以作为构造函数，声明函数都有一个prototype属性，这个属性会初始化一个对象，即原型对象，原型对象有一个构造器，constructor，默认指向声明的函数
+	
+	实例对象的__proto__属性指向原型对象
+	
+	原型链：实例对象往上找构造实例相关联的对象，一直到object.prototype，这是整个原型链的顶端。
+	
+	通过原型链找到原型对象的方法，原型对象的方法被不同实例所共有的
+	
+	寻找实例的方法，现在实例本身上寻找，如果没有找到就通过__proto__到原型对象上找,如果还没找到，再通过__proto__往上一级的原型对象上找，一直到object.prototype,如果还没找到，就告诉这个实例没有找到方法或者属性。 
+	
+	函数才会有prototype，对象是没有prototype
+	
+	只有实例对象有__proto__，函数也是对象，也有__proto__
+	
+	
+	
+	```
+	//接上面例子
+	M.prototype.constructor === M   // true
+	o3.__proto__ === M.prototype
+	
+	M.prototype.say = function() {
+    	console.log('say hi')
+    }
+
+    var o5 = new M('o5')
+    
+    o3.say() // say hi
+    o5.say() // say hi
+    
+    M.__proto__ === Function.prototype // M的构造函数是function，M普通函数是Function构造函数的实例
+	```
+* instanceof的原理
+
+	
