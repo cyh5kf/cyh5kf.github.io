@@ -648,4 +648,91 @@ window->document->html->body<-目标元素
 	```
 * instanceof的原理
 
+
+## 二面/三面
+
+### 渲染机制
+* 什么是DOCTYPE及作用
+	DTD是一系列的语法规则，用来定义XML或XHTML的文件类型。浏览器会使用它来判断文档类型，决定使用何种协议来解析，以及切换浏览器模式。
 	
+	DOCTYPE是用来声明文档类型和DTD规范的，一个主要的用途便是文件的合法性验证。如果文档代码不合法，那么浏览器解析就会出一些差错。
+	
+	HTML5  <!DOCTYPE html>
+* 浏览器是怎么渲染的
+
+	浏览器拿到HTML和CSS，HTML转成DOM Tree，css转成CSSDOM Tree，最终合并成Render tree，同事进行布局位置计算，然后进行描绘，最后显示。
+	
+* 重排Reflow
+	DOM结构中各个元素都有自己的盒子模型，这些都需要浏览器根据样式来进行计算并根据计算结果将元素放到它该出现的位置，这个过程就叫reflow。
+	
+	触发Reflow
+	
+	修改DOM，移动DOM，修改样式，resize窗口或者滚动，修改网页的默认字体
+	
+* 重绘Repaint
+
+	当盒子的位置，大小以及其他属性，例如颜色，字体大小等都确定下来后，浏览器于是便把这些元素按照各自的特性绘制了一遍，也是页面内容就出现了，这个过程就叫repaint。
+	
+	触发repaint
+	
+	DOM改动，CSS改动
+	
+	如何避免最小程度的repaint：添加节点，一次性添加。
+	
+* 布局Layout
+
+### JS运行机制
+```
+console.log(1)
+setTimeout(function() {
+	console.log(3)
+}, 0)
+console.log(2)
+// 1  2  3
+```
+JS是单线程的，一个时间内JS只能干一件事，任务队列分同步任务和异步任务，setTimeout是异步任务，异步任务要挂起，先不执行，先执行同步任务，同步任务执行完毕再触发异步任务。
+
+```
+console.log('A')
+while(true) {
+
+}
+console.log('B')
+// 输出'A'
+```
+while是同步任务，会不断的循环，所以不会执行到B
+
+```
+for (var i=0;i<4;i++) {
+	setTimeout(function() {
+		console.log(i)
+	}, 1000)
+}
+// 输出4个4
+```
+setTimeout是异步任务，每次循环setTimeout就会被挂起，放入任务队列中，都是一秒后执行，所以有四个setTimeout任务，这里for循环是同步任务，所以会先执行for循环，for循环执行结束之后，i变量被重复声明，其结果是最后一次for循环的结果，也就是4，然后再执行4次setTimeout任务，输出4个4。
+
+Event loop(事件循环)
+
+浏览器的JS引擎遇到setTimeout，识别是一个异步任务，它不会把它放在异步栈里面，先拿走，同步任务结束之后，同步任务栈空了之后，setTimeout定时时间到了，会把setTimeout任务放到异步任务栈里，然后在运行栈中执行，结束之后再去异步任务栈中监听有没有异步任务，如此循环。
+
+异步任务
+
+* setTimeout和setInterval
+* DOM事件
+* ES6中的Promise
+
+### 页面性能
+
+### 错误监控
+
+
+## 三面/四面
+
+* 业务能力
+	
+
+* 团队协作能力 
+* 事务推动能力（跨部门） 
+* 带人能力 
+* 其他能力
