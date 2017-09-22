@@ -47,6 +47,7 @@ angular官方支持
 
 
 ## angular程序架构
+![Angular程序架构](http://ouq0pnc4r.bkt.clouddn.com/angular-Architecture.png)
 
 
 
