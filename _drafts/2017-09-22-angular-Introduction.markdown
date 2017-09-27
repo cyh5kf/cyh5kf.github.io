@@ -50,7 +50,81 @@ angular官方支持
 ![Angular程序架构](http://ouq0pnc4r.bkt.clouddn.com/angular-Architecture.png)
 
 
+### 配置开发环境
+安装node.js包
 
+安装angular cli命令行工具
+```
+npm install -g @angular/cli
+或者 sudo cnpm i -g @angular/cli
+如果都不行使用 cnpm i -g angular-cli
+```
+
+创新新项目
+```
+sudo ng new demo
+```
+
+进入项目，安装npm包
+```
+cd demo
+cnpm i
+```
+
+启动项目
+```
+sudo npm start
+或者 ng serve
+```
+
+### 项目结构
+* e2e 端到端的测试目录，自动测试
+* src 应用源代码目录
+* .editorconfig IDE配置文件
+* .gitignore git的配置文件
+* .angular-cli.json  angular命令行工具的配置文件，可以在这里添加第三方库
+* karma.conf.js  karma单元测试的配置文件，执行自动化测试
+* package.json  npm的配置文件
+* protractor.json  自动化测试的配置文件 
+* README.md  文档说明
+* tslint.json 定义typeScript代码质量检查的规则
+* src/app  包含应用的组件和模块
+* src/assets 存空的静态资源，图片
+* src/environments  环境配置
+* src/index.html  整个应用的根html
+* src/main.js 这个脚本执行的入口点
+* src/polyfills.ts  导入必要的库，兼容老版本浏览器
+* src/style.css 放应用的全局的样式
+* src/test.js 自动化测试
+* src/tsconfig.app.json  typeScript编译器的配置
+* src/app/app.component.ts  
+
+#### 组件结构
+![Angular组件结构](http://ouq0pnc4r.bkt.clouddn.com/angular-models.png)
+
+### angular启动过程
+看 angular-cli.json
+在main.ts中启动应用，并加载模块，在app.module.ts中加载完所有依赖的模块，在index.html中寻找AppModule中指定的主组件对应的css选择器app-root，找到选择器后，再用app.components.ts中制定的html模板内容替换掉app-root这个标签，在这个过程完成之前将会展现app-root中的字符串loading...
+
+### 引入第三方库
+```
+npm install xxx --save
+```
+
+在angular-cli.json里 script数组添加node_modules里的模块文件，使用相对路径
+
+安装模块的类型文件
+
+```
+npm install types/xxx --save-dev
+// jquery最新版本会报错，可以指定版本
+npm install @types/jquery@2.0.47 --save-dev
+```
+
+### cli命令行生成组件代码，并在app.module.ts中声明
+```
+ng g component xxx(组件名)
+```
 
 
 
