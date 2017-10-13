@@ -6,8 +6,6 @@ date: 2017-09-22 12:00:00.000000000 +08:00
 
 最近因为项目需要用到angular框架，所以需要学习angular框架，故此找了一些教程，并记录下相关知识点。
 
-第一篇博客讲解angular简介，以及angular程序架构
-
 ## 与react对比
 ### 速度
 react采用虚拟DOM机制，速度非常快，先更新虚拟DOM，再更新实际DOM，比angular的优势在于：一是更新DOM的次数少，二是更新DOM的内容少。
@@ -46,7 +44,9 @@ vue只关注web，angular大的前端平台，还可以开发native
 angular官方支持
 
 
-## angular程序架构
+## 第一章节 —— 构建angular应用页面
+
+### angular程序架构
 ![Angular程序架构](http://ouq0pnc4r.bkt.clouddn.com/angular-Architecture.png)
 
 
@@ -126,9 +126,66 @@ npm install @types/jquery@2.0.47 --save-dev
 ng g component xxx(组件名)
 ```
 
+### ng指令
+for循环
 
+```
+ *ngFor="let product of products"
+```
 
+### 插值表达式
+在html模板里使用{{}}来插入数据
 
+### 属性绑定
+在组件控制器内定义`private imgUrl = "http://placehold.it/320x150";`
 
+然后在html模板里通过[]绑定
+```
+<img [src]="imgUrl" alt="">
+```
 
+###属性绑定中的特殊绑定，样式绑定
 
+```
+[class.glyphicon-star-empty]="star"
+```
+class表示绑定一个class类名，当star为true时，class类名添加到标签上，为false则不添加到标签上。
+
+###组件的输入属性，父组件数据传递给给子组件
+首先在父组件模板上绑定属性
+
+```
+<app-stars [rating]="product.rating"></app-stars>
+```
+
+然后在子组件内
+首先引入Input属性
+
+```
+import { Component, OnInit, Input } from '@angular/core';
+```
+
+再在控制器内定义输入属性
+
+```
+@Input()
+  private rating:number = 0;
+```
+等于0为默认值
+
+然后在子组件模板内使用插值表达式插值
+
+```
+<span>{{rating}}星</span>
+```
+
+## 第二章节 —— angular路由
+
+### 路由相关对象
+![Angular路由对象](http://ouq0pnc4r.bkt.clouddn.com/angular-router.png)
+
+使用ng命令带routing的参数创建带有路由的ng项目
+
+```
+ng new router --routing
+```
