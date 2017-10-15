@@ -113,6 +113,8 @@ npm install xxx --save
 
 在angular-cli.json里 script数组添加node_modules里的模块文件，使用相对路径
 
+在angular-cli.json里 style添加css文件，如果不起作用，可以在style.css文件内通过@import导入css文件，从而添加全局的css样式
+
 安装模块的类型文件
 
 ```
@@ -126,6 +128,12 @@ npm install @types/jquery@2.0.47 --save-dev
 ng g component xxx(组件名)
 ```
 
+### ng指令
+循环
+
+```
+*ngFor="let a of as"
+```
 
 
 
