@@ -351,4 +351,17 @@ this.routerInfo.params.subscribe((params: Params) => this.productId = params["id
 
 ### 子路由
 
+```
+{path: 'product/:id', component: ProductComponent, children: [
+    {path: '', component: ProductDescComponent},
+    {path: 'seller/:id', component: SellerInfoComponent}
+  ]},
+```
+在子页面的模板上routeLink路径需要写相对路径，不能写到根路径
+```
+<a [routerLink]="['./']">商品描述</a>
+<a [routerLink]="['./seller', 99]">销售员信息</a>
+<router-outlet></router-outlet>
+```
 
+### 辅助路由
