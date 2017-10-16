@@ -191,8 +191,6 @@ import { Component, OnInit, Input } from '@angular/core';
 ```
 ng new router --routing
 ```
-<<<<<<< HEAD
-=======
 生成一个`app-routing.module.ts`文件，以及`AppRoutingModule`模块，并在`app.modules.ts`的imports中导入这个模块
 
 在app-routing.module.ts中写路由配置
@@ -353,5 +351,4 @@ this.routerInfo.params.subscribe((params: Params) => this.productId = params["id
 
 ### 子路由
 
->>>>>>> eadbd44cd00cb6b902c29b5c1f1ebd85e711e932
 
