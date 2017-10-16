@@ -113,6 +113,8 @@ npm install xxx --save
 
 在angular-cli.json里 script数组添加node_modules里的模块文件，使用相对路径
 
+在angular-cli.json里 style添加css文件，如果不起作用，可以在style.css文件内通过@import导入css文件，从而添加全局的css样式
+
 安装模块的类型文件
 
 ```
@@ -189,4 +191,167 @@ import { Component, OnInit, Input } from '@angular/core';
 ```
 ng new router --routing
 ```
+<<<<<<< HEAD
+=======
+生成一个`app-routing.module.ts`文件，以及`AppRoutingModule`模块，并在`app.modules.ts`的imports中导入这个模块
+
+在app-routing.module.ts中写路由配置
+
+具体的路由放在前面，通配符路由放在后面
+
+```
+import { NgModule } from '@angular/core';
+import { Routes, RouterModule } from '@angular/router';
+import { HomeComponent } from './home/home.component';
+import { ProductComponent } from './product/product.component';
+
+const routes: Routes = [
+  {path: '', component: HomeComponent},
+  {path: 'product', component: ProductComponent},
+  {path: '**', component: Code404Component}
+];
+
+@NgModule({
+  imports: [RouterModule.forRoot(routes)],
+  exports: [RouterModule]
+})
+export class AppRoutingModule { }
+```
+
+在`app.component.html`中写导航结构，通过link标签属性导航
+
+```
+<!--"/"表示配置更路由，参数是一个数组，在路由的时候可以传递参数-->
+<a [routerLink]="['/']">主页</a>
+<a [routerLink]="['/product']">商品详情页</a>
+<!--ng事件绑定-->
+<input type="button" value="商品详情" (click)="toProductDetail()">
+<!-- router-outlet为路由插槽，显示组件内容 -->
+<router-outlet></router-outlet>
+```
+
+另一种导航方式通过事件绑定，router方法跳转，在`app.component.ts`中
+
+```
+import { Component } from '@angular/core';
+import { Router } from '@angular/router';
+
+@Component({
+  selector: 'app-root',
+  templateUrl: './app.component.html',
+  styleUrls: ['./app.component.css']
+})
+export class AppComponent {
+  title = 'app';
+
+  constructor(private router: Router) {
+
+  }
+
+  toProductDetail() {
+    this.router.navigate(['product']);
+  }
+}
+```
+
+### 路由传递参数
+
+* 在路由时传递参数
+
+```
+/product?id=1&name=2  => ActivatedRoute.queryParams[id]
+```
+
+* 在查询参数中传递数据
+
+在html模板中定义路由参数
+
+```
+<a [routerLink]="['/product']" [queryParams]="{id: 1}">商品详情页</a>
+```
+
+然后在页面组件里写
+
+```
+import { Component, OnInit } from '@angular/core';
+import { ActivatedRoute } from '@angular/router';
+
+@Component({
+  selector: 'app-product',
+  templateUrl: './product.component.html',
+  styleUrls: ['./product.component.css']
+})
+export class ProductComponent implements OnInit {
+
+  private productId: number;
+
+  constructor(private routerInfo: ActivatedRoute) { }
+
+  // 组件声明周期中的钩子，在组件实例化后调用一次
+  ngOnInit() {
+    this.productId = this.routerInfo.snapshot.queryParams["id"];
+  }
+
+}
+```
+
+在页面模板里通过插值表达式，即可展示路由信息
+
+```
+<p>商品ID是： {{productId}}</p>
+```
+
+* 在路由路径中传递数据
+
+在app-routing.module.ts路由配置文件中修改，添加路由参数
+
+```
+{path: 'product/:id', component: ProductComponent}
+```
+
+在app.component.html模板中通过数组添加参数
+
+```
+<a [routerLink]="['/product', 1]">商品详情页</a>
+```
+
+在product.component.ts组件中修改查询参数的方法，`snapshot`叫做参数快照
+
+```
+ngOnInit() {
+    this.productId = this.routerInfo.snapshot.params["id"];
+  }
+```
+
+### 在app.component.ts中修改点击跳转事件
+
+```
+toProductDetail() {
+    this.router.navigate(['product', 2]);
+  }
+```
+
+当从主页跳转到商品详情页时，商品详情组件被创建，ngOnInit方法被调用。而当商品详情已经被创建时，再去点击商品详情按钮，这时候ngOnInit方法不会被调用，所以路由参数信息不会改变。
+
+这时候需要把参数快照改为参数订阅模式
+
+```
+import { ActivatedRoute, Params } from '@angular/router';
+
+this.routerInfo.params.subscribe((params: Params) => this.productId = params["id"]);
+```
+
+
+### 重定向路由
+在用户访问一个特定的地址时，将其重定向到另一个指定的地址
+
+在app-routing.module.ts中修改路由配置
+
+```
+{path: '', redirectTo: '/home', pathMatch: 'full'}
+```
+
+### 子路由
+
+>>>>>>> eadbd44cd00cb6b902c29b5c1f1ebd85e711e932
 
