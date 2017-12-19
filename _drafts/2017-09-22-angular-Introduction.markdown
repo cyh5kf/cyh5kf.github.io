@@ -349,7 +349,7 @@ this.routerInfo.params.subscribe((params: Params) => this.productId = params["id
 {path: '', redirectTo: '/home', pathMatch: 'full'}
 ```
 
-### 子路由
+### 子路由（父子组件之间的路由关系）
 
 ```
 {path: 'product/:id', component: ProductComponent, children: [
@@ -358,10 +358,104 @@ this.routerInfo.params.subscribe((params: Params) => this.productId = params["id
   ]},
 ```
 在子页面的模板上routeLink路径需要写相对路径，不能写到根路径
+子组件还可以再嵌套插槽
+
 ```
 <a [routerLink]="['./']">商品描述</a>
 <a [routerLink]="['./seller', 99]">销售员信息</a>
 <router-outlet></router-outlet>
 ```
+所有路由相关的信息都在app-routing.module.ts文件里，组件本身不知道任何路由相关的信息
 
-### 辅助路由
+### 辅助路由（兄弟组件之间的路由关系）
+
+在app.component.html定义插槽,添加点击链接,null不显示组件
+
+```
+<a [routerLink]="[{outlets: {aux: 'chat'}}]">开始聊天</a>
+<a [routerLink]="[{outlets: {aux: null}}]">结束聊天</a>
+
+<!-- router-outlet为路由插槽，显示组件内容 -->
+<router-outlet></router-outlet>
+<router-outlet name="aux"></router-outlet>
+```
+
+在app.routing.module.ts增加路由配置
+
+```
+{path: 'chat', component: ChatComponent, outlet: 'aux'},
+```
+
+定义辅助路由的同时，指定主路由的路径，可以用primary: ''定义
+
+```
+<a [routerLink]="[{outlets: {primary: 'home', aux: 'chat'}}]">开始聊天</a>
+```
+
+
+### 路由守卫（相当于路由钩子）
+1.只有当用户已经登录并拥有某些权限时才能进入某些路由。
+
+2.一个有多个表单组件组成的向导，例如注册流程，用户只有在当前路由的组件中填写了满足要求的信息才可以导航到下一个路由
+
+3.当用户未执行保存操作而试图离开当前导航时提醒用户
+
+* CanActivate: 处理导航到某路由的情况
+
+```
+定义一个路由守卫进入方法login.guard.ts
+import { CanActivate } from "@angular/router";
+
+// 定义路由守卫方法l，返回一个布尔值
+export class LoginGuard implements CanActivate {
+    canActivate() {
+        let loggedIn: boolean = Math.random() < 0.5;  // 用随机数模拟登陆信息
+        if(!loggedIn) {
+            console.log("用户未登录");
+        }
+        return loggedIn;
+    }
+}
+
+然后在路由模块里增加路由守卫进入属性
+{path: 'product/:id', component: ProductComponent, children: [
+  {path: '', component: ProductDescComponent},
+  {path: 'seller/:id', component: SellerInfoComponent}
+], canActivate: [LoginGuard]},   // canActivate属性表示试图进入product路由时，一次调用数组里的路由守卫方法，如果其中一个守卫范围false，则路由请求被拒绝进入
+
+@NgModule({
+  imports: [RouterModule.forRoot(routes)],
+  exports: [RouterModule],
+  providers: [LoginGuard, UnsavedGuard] //添加路由守卫
+})
+```
+
+* CanDeactivate: 
+
+```
+定义一个路由守卫离开方法unsaved.guard.ts
+import { CanDeactivate } from "@angular/router";
+import { ProductComponent } from '../product/product.component';
+
+// 定义路由守卫方法，返回一个布尔值
+export class UnsavedGuard implements CanDeactivate<ProductComponent> {  // <>表示泛型，指定当前要保护的组件类型
+    canDeactivate(component: ProductComponent) {  // 参数为当前要保护的组件，可以传递组件的信息，比如属性，调用组件的方法
+        return window.confirm("你还没有保存，确定要离开吗？");
+    }
+}
+
+然后在路由模块里增加路由守卫离开属性
+{path: 'product/:id', component: ProductComponent, children: [
+  {path: '', component: ProductDescComponent},
+  {path: 'seller/:id', component: SellerInfoComponent}
+], canActivate: [LoginGuard],    // canActivate属性表示试图进入product路由时，一次调用数组里的路由守卫方法，如果其中一个守卫范围false，则路由请求被拒绝进入
+  canDeactivate: [UnsavedGuard]}, 
+
+@NgModule({
+  imports: [RouterModule.forRoot(routes)],
+  exports: [RouterModule],
+  providers: [LoginGuard, UnsavedGuard]
+})
+```
+
+* Resolve: 在路由激活之前获取路由数据
