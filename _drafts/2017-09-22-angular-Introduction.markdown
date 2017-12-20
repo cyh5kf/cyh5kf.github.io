@@ -458,4 +458,181 @@ export class UnsavedGuard implements CanDeactivate<ProductComponent> {  // <>表
 })
 ```
 
-* Resolve: 在路由激活之前获取路由数据
+* Resolve: 在路由激活之前获取路由数据（在http请求得到数据之后进行判断再进入对应路由）
+
+demo里的逻辑是当点击商品详情页的时候传递id为1，触发路由守卫resolve方法，当id为1时，生成Product模块，在产品路由定义resolve属性，产品模块路由订阅Product,通过Product传递过来的id和name更新产品模块本地的id和name信息，从而渲染到产品页面上。当点击商品详情按钮，没有传递id参数，resolve方法把路由导向home路径。
+
+```
+定义一个路由守卫resolve方法,product.resolve.ts
+
+import { Resolve, ActivatedRouteSnapshot, RouterStateSnapshot, Router } from '@angular/router';
+import { Product } from '../product/product.component';
+import { Injectable } from '@angular/core';
+
+@Injectable()
+export class ProductResolve implements Resolve<Product> {
+    constructor(private router: Router) {
+
+    }
+
+    resolve(route: ActivatedRouteSnapshot, state: RouterStateSnapshot) {
+        let productId:number = route.params["id"];
+        if(productId == 1) {
+            return new Product(1, "iPhone7");
+        } else {
+            this.router.navigate(['/home']);
+            return undefined;
+        }
+    }
+}
+
+在路由模块里定义resolve
+{path: 'product/:id', component: ProductComponent, children: [
+  {path: '', component: ProductDescComponent},
+  {path: 'seller/:id', component: SellerInfoComponent}
+], resolve: {
+  product: ProductResolve
+}},  
+
+@NgModule({
+imports: [RouterModule.forRoot(routes)],
+exports: [RouterModule],
+providers: [LoginGuard, UnsavedGuard, ProductResolve]
+})
+
+在product组件里新增一个Product模块
+export class Product {
+  constructor(public id: number, public name: string) {
+
+  }
+}
+
+在ProductComponent模块里定义路由信息
+  private productName: string;  //新增productName
+
+  ngOnInit() {
+    //参数快照
+    // this.productId = this.routerInfo.snapshot.params["id"];
+    //参数订阅
+    this.routerInfo.params.subscribe((params: Params) => this.productId = params["id"]);
+
+    this.routerInfo.data.subscribe((data: {product: Product}) => {
+      this.productId = data.product.id;
+      this.productName = data.product.name;
+    })
+  }
+
+在product.component.html新增productName
+<p>商品名称是： {{productName}}</p>
+```
+
+
+## 第四章节 —— angular依赖注入（写出可重用的组件）
+
+### 要解决的问题
+
+依赖注入：Dependency Injection 简称DI
+控制反转：Inversion of Control 简称IOC
+
+```
+var product = new Product();
+createShipment(product);
+```
+
+### 依赖注入的好处
+
+```
+@NgModule({
+  providers: [ProductService]
+})
+export class AppModule{}
+
+@Component({
+  ...省略组件配置
+})
+
+export class ProductComponent {
+  product: Product;
+  constructor(productService: ProductService) {
+    this.product = productService.getProduct();
+  }
+}
+```
+
+### 内容
+
+#### 注入器
+
+```
+//通过构造函数声明，在angular应用中寻找ProductService,如果能找到，则把实例注入到productService对象中
+constructor(private productService: ProductService) {}
+```
+
+#### 提供器
+
+```
+providers: [ProductService]   //简写形式
+
+// provide指定提供器的token，useClass说明实例化方式时new，在构造函数中声明属性类型 ProductService，会去找provide的声明，通过useClass new一个实例
+providers: [{provide: ProductService, useClass: ProductService}]  // 完整写法
+
+// 在构造函数声明一个属性类型和provide类型一致，new的实例时useClass里的类
+providers: [{provide: ProductService, useClass: AnotherProductService}]
+
+// 工厂方法，做一些初始化的工作
+providers: [{provide: ProductService, useFactory: () => {}}]
+```
+
+#### 提供器的作用域
+1.如果在app.module.ts中声明的，所有的组件都可以使用，不需要在组件内部指定提供器
+2.当提供器声明在组件中时，只对声明它的组件及其子组件可见，其他组件不可见
+3.当声明在模块中的提供器和组件中的提供器具有相同的token，组件中的提供器会覆盖模块中的提供器
+4.应该优先将服务提供其声明在模块中，只有在服务必须对组件之外的其他组件不可见时才将其声明在组件中，这种情况时非常罕见的
+
+#### @Injectable()  
+装饰器，ProductService也可以通过构造函数注入其他服务到这个服务，至于这个服务能否注入到其他服务，由有没有在模块里（app.module.ts）声明决定
+
+1.只有声明了装饰器的服务才可以注入其他服务，所以每一个服务类都添加装饰器。
+
+2.一致性，所有的服务类都遵循同样的规则。
+
+3.在component组件中没有装饰器，因为组件由@component装饰器，都是@injectable的子类，所以在组件声明component装饰器，实际已经声明了injectable装饰器，所以才能在组件中注入服务。
+
+
+### 使用工厂和值声明提供器
+
+在模块中使用`providers`声明提供器，用new操作符实例化服务类，但是有时候需要根据条件具体实例化那个对象，也有可能调用对象的构造函数需要传递参数，这个时候需要使用工厂提供器。
+
+```
+  providers: [{
+    provide: ProductService,
+    useFactory: (logger: LoggerService, isDev) => {  // 使用工厂方法提供器，注意在这里声明的实例化对象，在整个应用中调用的对象都是同一个
+      if(isDev) {
+        return new ProductService(logger);
+      } else {
+        return new AnotherProductService(logger);
+      }
+    },
+    deps: [LoggerService, "IS_DEV_ENV"]  // 在deps里声明需要依赖的服务并实例化对象，通过参数传入工厂方法提供器
+  }, LoggerService,
+    {
+      // provide: "IS_DEV_ENV", useValue: false  // 第一个参数是字符串，第二个是内容值，通过这个方式在工厂方法提供器注入第二个参数，根据第二个参数的值来判断执行哪一个服务。
+      provide: "APP_CONFIG", useValue: {isDev: false}  // 也可以传递一个对象
+    }
+  ],
+```
+
+工厂方法提供器实现总体逻辑：
+
+在component组件里的构造函数声明了一个ProductService类型的token注入，angular会去找这个token所对应的注入器，在app.module.ts模块里找到了提供器声明，然后这个token使用了工厂函数来进行实例化，调工厂函数又需要依赖另一个服务，叫LoggerService,也是一个token，继续找LoggerService的提供器，根据LoggerService的提供器声明来实例化LoggerService，如果LoggerService也是需要一个工厂，工厂也需要一个依赖，就这样一直找下去。在整个过程中组件中不知道发生的这些事，它要做的事就是拿到组装好的ProductService，直接调服务里的方法就可以了，这就是依赖注入。它把组件和服务的具体实现以及服务的依赖都隔离开了，让组件有更高的重用性。
+
+
+### 注入器的层级关系
+
+应用级注入器 > 主组件注入器 > 子组件注入器
+
+在app.module.ts里的providers和imports声明的提供器都被注册到应用级的注入器。angular创建启动模块的主组件AppComponent,同时应用级的注入器为主组件创建组件级的注入器，并将组件声明的提供器，注入到组件级的注入器上。主组件模板引入子组件，可以使用选择引入或者路由引入。当子组件创建时，父组件的注入器为子组件也创建注入器，将子组件声明的提供器注册到子组件的注入器，以此类推，最后应用形成一组注入器，与组件的上下级关系一样的层级关系。
+
+例如：Product1Component组件构造函数声明一个ProductService这个类型的依赖，Product1Component组件的注入器首先会检查自身是否注册了token类型为ProductService的提供器，如果没有找到，则会查找它的父组件，它的父组件就是AppComponent,检查AppComponent注入器上是否有合适的提供器，如果仍然没有找到，则继续网上找，一直找到应用级的注入器，这是发现在应用级的注入器注册了符合条件的提供器ProductService，根据这个提供器提供的配置实例化ProductService的实例，并且注入Product1Component组件的构造函数，如果到应用级注入器都没有发现符合条件的提供器，则抛出异常。这个就是angular依赖注入的整个工作方式。
+
+注意：angular依赖注入只有一个注入点，就是组件的构造函数，如果一个组件的构造函数没有任何参数，可以断定这个组件没有被注入任何东西。
