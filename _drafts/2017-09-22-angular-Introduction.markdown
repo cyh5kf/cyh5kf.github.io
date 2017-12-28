@@ -636,3 +636,79 @@ providers: [{provide: ProductService, useFactory: () => {}}]
 例如：Product1Component组件构造函数声明一个ProductService这个类型的依赖，Product1Component组件的注入器首先会检查自身是否注册了token类型为ProductService的提供器，如果没有找到，则会查找它的父组件，它的父组件就是AppComponent,检查AppComponent注入器上是否有合适的提供器，如果仍然没有找到，则继续网上找，一直找到应用级的注入器，这是发现在应用级的注入器注册了符合条件的提供器ProductService，根据这个提供器提供的配置实例化ProductService的实例，并且注入Product1Component组件的构造函数，如果到应用级注入器都没有发现符合条件的提供器，则抛出异常。这个就是angular依赖注入的整个工作方式。
 
 注意：angular依赖注入只有一个注入点，就是组件的构造函数，如果一个组件的构造函数没有任何参数，可以断定这个组件没有被注入任何东西。
+
+
+
+## 第五章 数据绑定/响应式编程和管道
+
+### 数据绑定
+
+#### 插值表达式
+
+```
+<h1>{{productTitle}}</h1> // 属于DOM属性绑定
+```
+
+#### html标签属性绑定
+
+```
+<img [src]="imgUrl">
+<img src="{{imgUrl}}">  //有时候属性绑定和插值表达式是一样的
+
+//class属性绑定会覆盖前面的class
+<div class="aaa bbb" [class]="someExpression">something</div>
+
+//根据表达式的真假来确定是否显示该样式名
+<div [class.special]="siSpecial">something</div>
+
+// 同时控制多个css类,表达式来控制前面的类是否显示
+<div [ngClass]="{aaa: isA, bbb:isB}">something</div>
+
+// 样式绑定
+<button [style.color]="isSpecial? 'red': 'green'>Red</button>
+
+// 控制多个样式
+<div [ngStyle]="{'font-size': this.canSave? 'italic': 'normal'}">
+```
+
+#### Dom属性绑定
+
+```
+<input value="Tome" (input)="doOnInput($event)">
+
+doOnInput(event: any) {
+  console.log(event.target.value); // Dom属性是可以改变的
+  console.log(event.target.getAttribute('value')); // html属性初始化值，不可改变
+}
+```
+
+HTML属性和DOM属性的关系
+
+* 少量HTML属性和DOM属性之间有着1:1的映射，如id。
+
+* 有些HTML属性没有对应的DOM属性，如colspan。
+
+* 有些DOM属性没有对应的HTML属性，如textContent。
+
+* 就算名字相同，HTML属性和DOM属性也不是同一样东西。
+
+* HTML属性的值指定了初始值；DOM属性的值表示当前值。DOM属性的值可以改变；HTML属性的值不能改变。
+
+* 模板绑定是通过DOM属性和事件来工作的，而不是HTML属性。
+
+#### 事件绑定，使用小括号将组件控制器的一个方法绑定为模板上的一个事件的处理器
+
+```
+<button (click)="toProductDetail()">商品详情</button>
+<input (input)="onInputEvent($event)"> // $event是浏览器事件对象
+
+//也可以给属性赋值
+<button (click)="saved = true">
+```
+
+数据的双向绑定是一个可选项，框架默认是单项绑定
+
+
+### 响应式编程
+
+### 管道
