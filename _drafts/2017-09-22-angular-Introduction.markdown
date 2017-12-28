@@ -669,6 +669,10 @@ providers: [{provide: ProductService, useFactory: () => {}}]
 
 // 控制多个样式
 <div [ngStyle]="{'font-size': this.canSave? 'italic': 'normal'}">
+
+<td [attr.colspan]="size">慕课网</td>
+
+<input [attr.value]="greeting">
 ```
 
 #### Dom属性绑定
