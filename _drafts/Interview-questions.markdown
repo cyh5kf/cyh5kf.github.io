@@ -966,8 +966,8 @@ createHashHistory: hashchange
 
 createMemoryHistory: 因为是在内存中操作，跟浏览器没有关系，不涉及UI层面的事情，所以可以直接进行历史信息的回退
 
-![移动端性能优化](http://ouq0pnc4r.bkt.clouddn.com/react-router.png)
 ```
+![移动端性能优化](http://ouq0pnc4r.bkt.clouddn.com/react-router.png)
 
 * redux概述原理，使用redux有什么问题，reducer如何管理
 
