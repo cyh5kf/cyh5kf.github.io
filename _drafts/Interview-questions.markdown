@@ -1112,23 +1112,287 @@ cheap-module-source-map： 原始代码（只有行内） 与上面一样除了�
 source-map： 原始代码 最好的sourcemap质量有完整的结果，但是会很慢
 ```
 
-* webpack2和1的区别
-
 ## vuejs
 
 * vue生命周期有哪些
+https://www.cnblogs.com/penghuwan/p/7192203.html
+![移动端性能优化](http://ouq0pnc4r.bkt.clouddn.com/vue%E7%94%9F%E5%91%BD%E5%91%A8%E6%9C%9F.jpg）
+
+```
+
+1. 在beforeCreate和created钩子函数之间的生命周期
+在这个生命周期之间，进行初始化事件，进行数据的观测，可以看到在created的时候数据已经和data属性进行绑定（放在data中的属性当值发生改变的同时，视图也会改变）。
+
+2. created钩子函数和beforeMount间的生命周期
+首先会判断对象是否有el选项。如果有的话就继续向下编译，如果没有el选项，则停止编译，也就意味着停止了生命周期，直到在该vue实例上调用vm.$mount(el)。
+template参数选项的有无对生命周期的影响。
+（1）.如果vue实例对象中有template参数选项，则将其作为模板编译成render函数。
+（2）.如果没有template选项，则将外部HTML作为模板编译。
+（3）.可以看到template中的模板优先级要高于outer HTML的优先级。
+render函数选项 > template选项 > outer HTML.
+
+3. beforeMount和mounted 钩子函数间的生命周期
+可以看到此时是给vue实例对象添加$el成员，并且替换掉挂在的DOM元素。因为在之前console中打印的结果可以看到beforeMount之前el上还是undefined。
+
+4. mounted
+挂载完成
+
+5. beforeUpdate钩子函数和updated钩子函数间的生命周期
+当vue发现data中的数据发生了改变，会触发对应组件的重新渲染，先后调用beforeUpdate和updated钩子函数。
+
+6. updated
+更新完成
+
+7.beforeDestroy和destroyed钩子函数间的生命周期
+beforeDestroy钩子函数在实例销毁之前调用。在这一步，实例仍然完全可用。
+destroyed钩子函数在Vue 实例销毁后调用。调用后，Vue 实例指示的所有东西都会解绑定，所有的事件监听器会被移除，所有的子实例也会被销毁。
+```
 
 * vue父子组件如何互相通信
+
+```
+父传子
+//方式一
+props: ['mdzz'],
+//方式二
+props: {
+    mdzz: String //这里指定了字符串类型，如果类型不一致会警告
+},
+//方式三
+props: {
+    mdzz: {
+        type: String,
+        default: '' 
+    }
+},
+
+子组件向父组件传递数据用$emit方法，
+//parent.vue
+template:
+<child @showbox="toshow"></child>
+js:
+methods:{
+    toshow(msg) {
+       this.msg2 = msg;
+    },
+}
+//child.vue
+template:
+<input @click="open" type="button" value="按钮" />
+js:
+methods:{
+    open() {
+        this.$emit('showbox','我是子组件数据'); 
+            //触发showbox方法，'我是子组件数据'为向父组件传递的数据
+        }
+}
+
+无直接关系组件之间的数据传递
+let vm = new Vue(); //创建一个新实例
+<div @click="ge"></div>
+methods: {
+    ge() {
+        vm.$emit('blur','哈撒ki'); //触发事件
+    }
+}
+
+<div></div>
+created() {
+  vm.$on('blur', (msg) => { 
+        this.data = msg; // 接收数据
+    });
+}
+```
 
 * vuex概述
 
 * vue-router概述
 
+```
+<router-link to="/goods">商品</router-link>
+<router-link to="/ratings">评论</router-link>
+<router-link to="/seller">商家</router-link>
+
+// 首先定义或者引入路由的组件
+// 方法一：直接定义路由组件
+const goods = { template: '<p>goods</p>' };
+const ratings = { template: '<p>ratings</p>' };
+const seller = { template: '<p>seller</p>' };
+// 方法二：import引入路由组件
+import goods from 'components/goods/goods';
+import ratings from 'components/ratings/ratings';
+import seller from 'components/seller/seller';
+// 然后定义路由(routes)，components还可以是Vue.extend()创建的
+const routes = [
+  { path: '/goods', component: goods },
+  { path: '/ratings', component: ratings },
+  { path: '/seller', component: seller }
+];
+// 接着创建路由实例
+const router = new VueRouter({
+  // ES6缩写语法，相当于routes:routes
+  routes  
+});
+// 最后创建vue实例并挂载
+const app = new Vue({
+  el: '#app',
+  router
+});
+// 或者
+const app = new Vue({
+  router
+}).$mount('#app')
+
+router-link属性配置
+
+replace
+一个布尔类型，默认为false。如果replace设置为true，那么导航不会留下history记录，点击浏览器回退按钮不会再回到这个路由。
+
+tag
+router-link默认渲染成a标签，也有方法让它渲染成其他标签，tag属性就用来设置router-link渲染成什么标签的。
+
+active-class
+上面说了被选中的router-link将自动添加一个class属性值.router-link-active，这个属性就是来修改这个class值的。
+
+router-view
+这个组件十分关键，它就是用来渲染匹配到的路由的。 
+可以给router-view组件设置transition过渡，具体用法见Vue2.0 Transition常见用法全解惑。 
+还可以配合<keep-alive>使用，keep-alive可以缓存数据，这样不至于重新渲染路由组件的时候，之前那个路由组件的数据被清除了。比如对当前的路由组件a进行了一些DOM操作之后，点击进入另一个路由组件b，再回到路由组件a的时候之前的DOM操作还保存在，如果不加keep-alive再回到路由组件a时，之前的DOM操作就没有了，得重新进行。如果你的应用里有一个购物车组件，就需要用到keep-alive。
+
+<transition>
+  <keep-alive>
+    <router-view></router-view>
+  </keep-alive>
+</transition>
+
+不同页面之间的标题
+// 关键在这里，设置afterEach钩子函数
+router.afterEach((to, from, next) => {
+  document.title = to.name;
+})
+
+重定向
+const routes = [
+  { path: '/', redirect: '/goods'}
+]
+
+导航式编程
+// 在创建vue实例并挂载后调用
+router.push('/goods')
+```
+
 * vue-router钩子
+
+```
+router.beforeEach((to, from, next) => {
+  // ...
+})
+每个钩子方法接收三个参数：
+
+    to: Route: 即将要进入的目标 路由对象
+
+    from: Route: 当前导航正要离开的路由
+
+    next: Function: 一定要调用该方法来 resolve 这个钩子。执行效果依赖 next 方法的调用参数。
+
+        next(): 进行管道中的下一个钩子。如果全部钩子执行完了，则导航的状态就是 confirmed （确认的）。
+
+        next(false): 中断当前的导航。如果浏览器的 URL 改变了（可能是用户手动或者浏览器后退按钮），那么 URL 地址会重置到 from 路由对应的地址。
+
+        next('/') 或者 next({ path: '/' }): 跳转到一个不同的地址。当前的导航被中断，然后进行一个新的导航。
+
+确保要调用 next 方法，否则钩子就不会被 resolved。
+
+某个路由独享的钩子
+
+const router = new VueRouter({
+  routes: [
+    {
+      path: '/foo',
+      component: Foo,
+      beforeEnter: (to, from, next) => {
+        // ...
+      }
+    }
+  ]
+})
+```
+
+Vue2.0 Transition
+
+```
+<!-- 首先将要过渡的元素用transition包裹，并设置过渡的name，然后添加触发这个元素过渡的按钮（实际项目中不一定是按钮，任何能触发过渡组件的DOM操作的操作都可以） -->
+<div>
+  <button @click="show=!show">show</button>
+  <transition name="fade">
+    <p v-show="show">hello</p>
+  </transition>
+</div>
+
+// 接着为过渡类名添加规则
+&.fade-enter-active, &.fade-leave-active
+  transition: all 0.5s ease     
+&.fade-enter, &.fade-leave-active
+  opacity: 0
+
+fade-enter：进入过渡的开始状态，元素被插入时生效，只应用一帧后立即删除；
+fade-enter-active：进入过渡的结束状态，元素被插入时就生效，在过渡过程完成之后移除；
+fade-leave：离开过渡的开始状态，元素被删除时触发，只应用一帧后立即删除；
+fade-leave-active：离开过渡的结束状态，元素被删除时生效，离开过渡完成之后被删除；
+
+CSS动画
+<div>
+  <button @click="show=!show">show</button>
+  <transition name="fold">
+    <p v-show="show">hello</p>
+  </transition>
+</div>
+
+.fold-enter-active {
+  animation-name: fold-in;
+  animation-duration: .5s;
+}
+.fold-leave-active {
+  animation-name: fold-out;
+  animation-duration: .5s;
+}
+@keyframes fold-in {
+  0% {
+    transform: translate3d(0, 100%, 0);
+  }
+  50% {
+    transform: translate3d(0, 50%, 0);
+  }
+  100% {
+    transform: translate3d(0, 0, 0);
+  }
+}
+@keyframes fold-out {
+  0% {
+    transform: translate3d(0, 0, 0);
+  }
+  50% {
+    transform: translate3d(0, 50%, 0);
+  }
+  100% {
+    transform: translate3d(0, 100%, 0);
+  }
+}
+
+路由懒加载
+const Foo = resolve => {
+  // require.ensure 是 Webpack 的特殊语法，用来设置 code-split point
+  // （代码分块）
+  require.ensure(['./Foo.vue'], () => {
+    resolve(require('./Foo.vue'))
+  })
+}
+```
 
 ## es6
 
 * es6有哪些新特性，分别描述
+https://github.com/laizimo/zimo-article/issues/38
 
 * const声明一个对象可以改变值吗
 
