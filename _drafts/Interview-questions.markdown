@@ -1117,8 +1117,6 @@ source-map： 原始代码 最好的sourcemap质量有完整的结果，但是�
 * vue生命周期有哪些
 https://www.cnblogs.com/penghuwan/p/7192203.html
 
-![vue生命周期](http://ouq0pnc4r.bkt.clouddn.com/vue%E7%94%9F%E5%91%BD%E5%91%A8%E6%9C%9F.jpg）
-
 ```
 
 1. 在beforeCreate和created钩子函数之间的生命周期
@@ -1148,6 +1146,8 @@ render函数选项 > template选项 > outer HTML.
 beforeDestroy钩子函数在实例销毁之前调用。在这一步，实例仍然完全可用。
 destroyed钩子函数在Vue 实例销毁后调用。调用后，Vue 实例指示的所有东西都会解绑定，所有的事件监听器会被移除，所有的子实例也会被销毁。
 ```
+
+![vue生命周期](http://ouq0pnc4r.bkt.clouddn.com/vue%E7%94%9F%E5%91%BD%E5%91%A8%E6%9C%9F.jpg）
 
 * vue父子组件如何互相通信
 
