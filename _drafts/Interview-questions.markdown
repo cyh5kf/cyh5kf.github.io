@@ -1116,7 +1116,8 @@ source-map： 原始代码 最好的sourcemap质量有完整的结果，但是�
 
 * vue生命周期有哪些
 https://www.cnblogs.com/penghuwan/p/7192203.html
-![移动端性能优化](http://ouq0pnc4r.bkt.clouddn.com/vue%E7%94%9F%E5%91%BD%E5%91%A8%E6%9C%9F.jpg）
+
+![vue生命周期](http://ouq0pnc4r.bkt.clouddn.com/vue%E7%94%9F%E5%91%BD%E5%91%A8%E6%9C%9F.jpg）
 
 ```
 
