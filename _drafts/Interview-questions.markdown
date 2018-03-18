@@ -1397,19 +1397,108 @@ https://github.com/laizimo/zimo-article/issues/38
 
 * const声明一个对象可以改变值吗
 
+const定义的基本数据类型的变量确实不能修改,而引用类型保存的是对象的指针，这就意味着，const仅保证指针不发生改变，修改对象的属性不会改变对象的指针，所以是被允许的。也就是说const定义的引用类型只要指针不发生改变，其他的不论如何改变都是允许的。
+
 * let，const用es5是如何实现的
+
+```
+(function(){
+    var a = 10;
+    ... ...
+}())
+```
+
+* 不存在变量提升与死区
+
+使用let声明的变量不会出现像var那样存在“变量提升”现象。但本质上，二者是相同的，它们都会在初始化时先初始化属性，再初始化逻辑，然而二者的区别在于使用let声明的变量虽然一开始就存在，但是不能使用，而使用var声明的变量则可以。一定要在声明后使用，否则将会报错。
+在块级作用域内如果使用let声明了某个变量，那么这个变量名必须在声明它的语句后使用，即使块外部的变量有与之重名的也不行。从块开头到声明变量的语句中间的部分，称为这个变量的“暂时性死区”。
+
+* 不允许重复声明
+
+let不允许在相同作用域内重复声明同一个变量，即同一个作用域内不允许出现名称相同的变量。比如下面几种形式，只能出现其中一个：
 
 * promise如何实现即时发生错误仍然执行一段代码
 
-* promise的两种状态
+* Promise有三种状态：pending，resolved，rejected
 
 * 数组去重，用es6如何实现
 
+```
+var arr = [1,1,'1','1',null,null,undefined,undefined,NaN,NaN];
+var newArr = Array.from(new Set(arr));
+
+```
+
 * 箭头函数和function函数区别
+
+this指向
+
+function传统定义的函数，this指向随着调用环境的改变而改变，而箭头 函数中的指向则是固定不变，一直指向定义环境的。
+
+构造函数 
+箭头函数固然好用，但是不能用于构造函数，即不能被new一下；
+
+变量提升
+
+由于js的内存机制，function的级别最高，而用箭头函数定义函数的时候，需要var(let const定义的时候更不必说)关键词，而var所定义的变量不能得到变量提升，故箭头函数一定要定义于调用之前！
+
+箭头函数不可以使用arguments对象，该对象在函数体内不存在。如果要用，可以用Rest参数代替
 
 * this的指向问题
 
 * 分别用es6和原生js实现继承
+
+```
+// 原型链实现继承
+  function Parent() {
+    this.sayAge = function() {
+      console.log(this.age);
+    }
+  }
+
+  function Child(firstname) {
+    this.fname = firstname;
+    this.age = 28;
+    this.saySomeThing = function() {
+      console.log(this.fname);
+      this.sayAge();
+    }
+  }
+  Child.prototype = new Parent();
+  var myChild = new Child('Lee');
+  myChild.saySomeThing(); // Lee 28
+
+// es6实现继承
+  class Animal {
+    //构造函数
+    constructor(props) {
+      this.name = props.name || '未知';
+    }
+
+    eat() {
+      alert(this.name + "在吃东西...");
+    }
+  }
+
+  //class继承
+  class Bird extends Animal {
+    //构造函数
+    constructor(props) {
+      //调用实现父类的构造函数
+      super(props);
+      this.type = props.type || "未知";
+    }
+
+    fly() {
+      alert(this.name + "在飞...");
+    }
+  }
+  var myBird = new Bird({
+    name: '鹦鹉'
+  })
+  myBird.eat()
+  myBird.fly()
+```
 
 ## nodejs
 
@@ -1417,9 +1506,73 @@ https://github.com/laizimo/zimo-article/issues/38
 
 * node单线程，如何利用服务器cpu多核
 
+Node其实并不是真正的单线程架构，因为Node自身还有I/O线程存在（网络I/O、磁盘I/O），这些I/O线程是由更底层的libuv处理，这部分线程对于JavaScript开发者来说是透明的。JavaScript代码永远运行在V8上，是单线程的。所以表面上来看NodeJS是单线程的。
+
+通过fork()复制的进程都是一个独立的进程，这个进程中有着独立而全新的V8实例。虽然Node提供了fork()用来复制进程使每个CPU内核都使用上，但是依然要记住fork()进程代价是很大的。好在Node通过事件驱动在单个线程上可以处理大并发的请求。
+
 * nginx反向代理和代理的区别
+
+1.正向代理
+
+拿借钱打个比方，A想向C借钱，但是C不认识A所以不借给他，然后A就通过B向C借钱，B借到钱之后再转交给A，在这个过程中B就扮演了一个正向代理的角色，这个过程中，真正借钱的人是谁，C是不知道的~
+
+我们常说的代理也就是指正向代理，正向代理的过程，它隐藏了真实的请求客户端，服务端不知道真实的客户端是谁，客户端请求的服务都被代理服务器代替来请求，科学上网工具 Shadowsocks 扮演的就是典型的正向代理角色。
+
+比如我想访问www.google.com，要想翻越这堵墙，你可以在国外用Shadowsocks来搭建一台代理服务器，代理帮我们请求www.google.com，代理再把请求响应结果再返回给我。
+
+2.反向代理
+
+还用借钱的例子，A想向C借钱，然后C借给他了，但是实际上这个钱可能C向B借的~至于钱到底是谁的，A是不知道的~
+
+这里的C扮演着一个反向代理的角色，客户不知道真正提供服务的人是谁。
+
+反向代理隐藏了真实的服务端，当我们访问www.baidu.com的时候，背后可能有成千上万台服务器为我们服务，但具体是哪一台，你不知道，也不需要知道，你只需要知道反向代理服务器是谁就好了。www.baidu.com就是我们的反向代理服务器，反向代理服务器会帮我们把请求转发到提供真实服务的服务器那里去。Nginx就是性能非常好的反向代理服务器，它可以用来做负载均衡。
 
 * commonjs规范中的require实现原理
 
+```
+// 模拟require的实现
+function _require(path) {
+    // 定义一个Module对象
+    var Module = function() {
+        this.exports = {};
+    }
+
+    // 引入nodejs 文件模块 下面是nodejs中原生的require方法
+    var fs = require('fs');
+
+    // 同步读取该文件
+    var sourceCode = fs.readFileSync(path, 'utf8');
+
+    // 头尾拼接包装成新的字符串
+    var packSourceCode = '(function(module,exports){ ' + sourceCode + ' return module.exports; })';
+
+    // 字符串转换成函数
+    var packFunc = eval(packSourceCode);
+
+    // 实例化一个Module 里面有一个exports属性
+    var module = new Module();
+
+    // 把module 和 它内部的module.exports都作为参数传进去 
+    // 并得到挂在到module.exports 或 exports上的功能
+    var res = packFunc(module, module.exports);
+
+    // 最终我们拿到了path代表的文件模块提供的API
+    return res; 
+}
+```
+
+nodejs中的模块分类和加载顺序
+nodejs 中核心模块和文件模块的引用方式：
+
+核心模块： require(‘核心模块名’);
+文件模块： require(‘路径+文件名’); 路径可以用./代表的相对路径或者绝对路径，其中文件名可以省略后缀名。
+自定义模块：特殊的文件模块，可能是一个文件或者包的形式
+模块加载顺序 ：
+
+优先从缓存加载
+核心模块：如http、fs、path等 (优先查找核心模块)
+文件模块： ./或../开始的相对路径文件模块，以/开始的绝对路径文件
+自定义模块：查找最费时
 
 
