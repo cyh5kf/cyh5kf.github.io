@@ -911,7 +911,7 @@ constructor(props, context)
 构造函数，在创建组件的时候调用一次。
 
 void componentWillMount()
-在组件挂载之前调用一次。如果在这个函数里面调用setState，本次的render函数可以看到更新后的state，并且只渲染一次。
+在组件挂载之前调用一次。如果在这个函数里面调用setState，本次的render函数可以看到更新后的state，并且只渲染一次。你可以在这里同步操作state
 
 void componentDidMount()
 在组件挂载之后调用一次。这个时候，子主键也都挂载好了，可以在这里使用refs。
@@ -919,6 +919,7 @@ void componentDidMount()
 void componentWillReceiveProps(nextProps)
 props是父组件传递给子组件的。父组件发生render的时候子组件就会调用
 componentWillReceiveProps（不管props有没有更新，也不管父子组件之间有没有数据交换）。
+在这里你可以拿到即将改变的状态，可以在这一步中通过setState方法设置state，并不会再一次触发render
 
 bool shouldComponentUpdate(nextProps, nextState)
 组件挂载之后，每次调用setState后都会调用shouldComponentUpdate判断是否需要重新渲染组件。默认返回true，需要重新render。在比较复杂的应用里，有一些数据的改变并不影响界面展示，可以在这里做判断，优化渲染效率。
@@ -945,6 +946,11 @@ void componentWillUnmount()
 更改state：state的更改是通过setState接口实现的。同时设计state是需要技巧的，哪些状态可以放在里面，哪些不可以；什么样的组件可以有state，哪些不可以有；这些都需要遵循一定原则的。这个话题有机会可以单独拎出来说
 
 调用forceUpdate方法：这个我们在上一阶段已经提到了，强制组件进行更新。
+
+* 调用时DOM就一定会被更新吗？
+React的Render函数被调用之后，React立即根据props或者state重新创建了一颗Virtual DOM Tree，虽然每一次调用时都重新创建，但因为在内存中创建DOM树其实是非常快且不影响性能的，所以这一步的开销并不大。而Virtual DOM的更新并不意味这Real DOM的更新，接下来的事情也是大家知道的，React采用算法将Virtual DOM和Real DOM进行对比，找出需要更新的最小步骤，此时Real DOM才可能发生修改。
+
+所以正确答案是，每一次的state更改都会使得render函数被调用，但页面的DOM不一定会发生修改
 
 * setState是异步
 
@@ -1074,6 +1080,14 @@ https://segmentfault.com/q/1010000012086401/a-1020000012111603
 store根据dispatch之后返回的action对象中的 type 属性来执行相关任务，也就是说只要带有相同 type 属性值的reducer都会执行。
 ```
 
+
+* 如果你使用过Redux与Vuex的话，聊聊他们的区别与你的心得
+
+代码文件大小：React代码打包之后相对较大，基本是300KB起跳；而Vue和Vuex框架代码则相对较小，基础库能维持在100KB左右。
+现成的框架：在Flux初期，Facebook只是推出了Flux这个框架概念，而没有实现这个框架。除非你使用一些第三方的Flux框架，否则你需要自己去实现Flux中的两个事件机制（Component对于Store的响应，Store对于Action的响应）。当然现在React的github项目里已经有Flux框架的示例代码，以及他们推出了Relay框架。相反Vuex不仅提出了这个框架概念，还实现并且提供了这个框架，让开发起来更加便捷。
+针对性的改进：如果你阅读过Vuex的官方文档的话，你会明白Vuex其实是针对Flux存在的一些缺陷而开发的。具体的缺陷其实我们在上一篇中提到过，例如不同的组件都维护自己的状态的话，不同组件之间想改变对方的状态其实会比较困难的。Vuex的解决办法也是上一篇中提到的那样，把state提升到全局的高度，尽可能是使用stateless组件。同时又引入了module等概念更利于代码的解耦和开发。
+具体细节上的差异：Vuex中保留了action与store的概念，并且引入了新的mutation。action和mutation广义上来说都是提交对store修改，不同的是action可以是异步的，并且大多数情况是在event handler中提交，通过$store.dispatch方法；唯一修改 Store 的地方只能通过mutation，而且mutation必须是同步的，直接对store进行修改
+
 * react组件如何实现双向绑定{{}}，不使用setState
 https://github.com/lhang/blog/issues/3
 
@@ -1130,6 +1144,36 @@ cheap-module-source-map： 原始代码（只有行内） 与上面一样除了�
 
 source-map： 原始代码 最好的sourcemap质量有完整的结果，但是会很慢
 ```
+
+* Webpack如何打包输出多个文件？
+
+```
+entry: {
+    app: './entry/app.js',
+    gallery: './entry/gallery.js',
+    about: './entry/about.js'
+}
+
+output: {
+    path: path.resolve('.', 'output'),
+    filename: '[name].bundle.js'
+}
+```
+
+* webpack打包时如何工作的？
+
+首先Webpack需要有一个入口模块，也就是webpack配置文件里的entry。通过对入口模块进行语法分析也好，注入依赖分析也好，找到模块的依赖。此时Webpack应该会有一个HashMap，key为模块的路径或者名称，而value则为模块的工厂代码或者具体内容。HashMap主要有两个作用，一方面是用于缓存（可能存在一个模块被多次引用的情况），另一方面则用于标记（模块是否被加载）。Webpack则针对入口模块以深度优先的原则逐个将依赖模块进行加载。最后将入口模块自己打包进bundle中。
+
+* 如何解决循环引用的问题
+
+即在对一个模块进行构建时对它的依赖建立一个链表，例如模块A的依赖链表是：B->C->D->E->F，在构建这个链表的同时，比如我们打算在F后添加模块G时，我们会去检测G的依赖链表里是否存在模块A，如果存在的话则形成了循环依赖。
+
+* 在什么情况下需要打包输出多个文件？
+
+例如你的站点有多个页面（home、gallery、about），但每个页面都是一个Vuex架构下的单页面应用。于是可以设置多个入口，key为入口名称，value为入口文件路径：
+
+loader和plugin的差别
+你觉得使用过什么高级技巧吗？
 
 ## vuejs
 
@@ -1223,6 +1267,23 @@ created() {
     });
 }
 ```
+
+* Vue.js 的双向绑定是如何实现的
+
+利用Javascript中的Object天生的支持的属性访问器。
+
+```
+let data = {};
+Object.defineProperty(data, 'key',  {
+    get() {
+        console.log('Get method invoked');
+    },
+    set(newVal) {
+        console.log('Set method invoked');
+    }
+})
+```
+那么接下来当你每次想访问data中key字段时，无论是取值data.key还是赋值data.key = 'Hi'，都会有打印信息。这也意味着，我们能够在用户执行普通的赋值和取值操作时，做一些事情，例如通知数据的消费者数据发生了更改，让它们重新编译模板。这也就是Vue.js双向绑定的思路。
 
 * vuex概述
 
