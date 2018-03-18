@@ -938,6 +938,25 @@ void componentWillUnmount()
 组件被卸载的时候调用。一般在componentDidMount里面注册的事件需要在这里删除。
 ```
 
+* 更新阶段会在三种情况下触发：
+
+更改props：一个组件并不能主动更改它拥有的props属性，它的props属性是由它的父组件传递给它的。强制对props进行重新赋值会导致程序报错。
+
+更改state：state的更改是通过setState接口实现的。同时设计state是需要技巧的，哪些状态可以放在里面，哪些不可以；什么样的组件可以有state，哪些不可以有；这些都需要遵循一定原则的。这个话题有机会可以单独拎出来说
+
+调用forceUpdate方法：这个我们在上一阶段已经提到了，强制组件进行更新。
+
+* setState是异步
+
+* omponentWillReceiveProps被调用就意味着props发生了更改
+
+新传入的属性和旧属性可能引用的是同一块内存区域（引用类型），所以单纯的用===判断是否相等并不准确。可行的解决办法之一就是对数据进行深度拷贝然后进行比较，但是这对大型数据结构来说性能太差，还能会碰上循环引用的问题。
+
+* componentWillUpdate()可以调用setState吗？
+
+与componentWillMount不同的是，在这个方法中你不可以使用setState，否则会立即触发另一轮的渲染并且又再一次调用componentWillUpdate，陷入无限循环中。
+
+
 * react pureRender原理
 修改shouldComponentUpdate，只是浅比较
 
